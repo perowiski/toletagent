@@ -1,0 +1,281 @@
+@import java.util
+@import models_enums.AgentProduct
+@(agents: List[Agent], total: Long, cForm: Form[AgentCredit])
+
+    @import fields._
+    @import scala.collection.immutable.Map
+
+    @import play.mvc.Http;
+    @request = @{
+        Http.Context.current().request()
+    }
+    @path = @{
+        Http.Context.current().request().path()
+    }
+
+    @layout("Agents", styles = styles, scripts = scripts) {
+
+        <div class="modal inmodal" id="addCredit" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content animated bounceInRight">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span
+                        aria-hidden="true">&times;</span><span
+                        class="sr-only">Close</span></button>
+                        <i class="fa fa-user modal-icon"></i>
+                        <h4 class="modal-title">Add Credit</h4>
+                    </div>
+                    <form id="addCreditForm">
+                        <div class="modal-body">
+                        @f_text(
+                            cForm("amount"),
+                            "Amount",
+                            "number",
+                            Map("placeholder" -> "Amount", "required" -> "required"),
+                            ""
+                        )
+
+                            <span class="help-block m-b-none text-danger" id="creditError"></span>
+
+                            <div id="loadingC" class="sk-spinner sk-spinner-three-bounce">
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <input type="hidden" name="agent_id" id="agent">
+                            <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
+                            <input onclick="addCredit()" type="button" class="btn btn-primary" value="Submit">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Agents' Table  (Total: @total)
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="row text-small">
+                            <div class="col-sm-4">
+                            </div>
+                            <div class="col-sm-4">
+                            </div>
+
+
+                            <form action="@routes.AdminDashboardController.agentList()" class="col-sm-4 form-inline">
+                                <div class="input-group">
+                                    <input type="text" name="search" value="@Utility.getQuery("search")" class="form-control" placeholder="Search">
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-sm" type="submit">Go!</button>
+                                    </span>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <table class="table table-striped text-small">
+                        <thead>
+                            <tr>
+                                <th width="20"><input type="checkbox"></th>
+                                <th>Detail</th>
+                                <th>Balance</th>
+                                <th>Settings</th>
+                                <th>Date Registered</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @for(agent <- agents) {
+                            <tr>
+                                <td><input type="checkbox" name="agent[]" value="@agent.id"></td>
+                                <td>
+                                    @agent.name <br/>
+                                    @agent.email <br/>
+                                    @agent.phone <br>
+                                </td>
+                                <td>
+                                @formatters.AmtFormatter.format(agent.balance)
+                                </td>
+                                <td>
+                                    <p><a onclick="setFields('@agent.id')" class="btn btn-success btn-xs" data-toggle="modal" data-target="#addCredit"><i class="fa fa-edit"></i>
+                                        Add Credit</a>
+                                    </p>
+
+                                    <p><a class="btn btn-info btn-xs" href="@routes.AdminCrudController.viewCreditHistory(agent.id.toString)" target="_blank">
+                                        <i class="fa fa-edit"></i> View History
+                                    </a>
+                                    </p>
+                                    <p><a class="btn btn-danger btn-xs" data-toggle="modal" data-target="#addProduct@agent.id"><i class="fa fa-plus"></i>
+                                        Add Products</a>
+                                    </p>
+                                    <div class="modal inmodal" id="addProduct@agent.id" tabindex="-1" role="dialog" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content animated bounceInRight">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal"><span
+                                                    aria-hidden="true">&times;</span> <span
+                                                    class="sr-only">Close</span>
+                                                    </button>
+                                                    <i class="fa fa-plus modal-icon"></i>
+                                                    <h4 class="modal-title">Add Product</h4>
+                                                </div>
+                                                <form id="setProductForm@agent.id">
+                                                    <div class="modal-body">
+                                                        <label class="control-label">Products</label> <br>
+                                                        @for(product <- AdminCrudController.products()) {
+                                                            <input type="checkbox" name="products" value="@product" @if(agent.products.asInstanceOf[util.Set[AgentProduct]].contains(product)) {
+                                                                checked="checked"}> @product - (@product.getRep)<br>
+                                                            }
+
+                                                        <span class="help-block m-b-none text-danger" id="productError@agent.id"></span>
+
+                                                        <div id="loadingA@agent.id" class="sk-spinner sk-spinner-three-bounce">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="modal-footer">
+                                                        <input type="hidden" name="agent" value="@agent.id">
+                                                        <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
+                                                        <input onclick="setProduct@agent.id ()" type="button" class="btn btn-primary" value="Submit">
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <script>
+                                    function setProduct@agent.id () {
+                                    //Stops the submit request
+                                    $("#setProductForm@agent.id").submit(function (e) {
+                                            e.preventDefault();
+                                        });
+
+                                        //get the form data and then serialize that
+                                        dataString = $("#setProductForm@agent.id").serialize();
+
+                                        //make the AJAX request, dataType is set to json
+                                        //meaning we are expecting JSON data in response from the server
+                                        $.ajax({
+                                            type: "POST",
+                                            url: "@routes.AdminCrudController.setProduct()",
+                                            data: dataString,
+                                            dataType: "json",
+
+                                            //if received a response from the server
+                                            success: function (data, textStatus, jqXHR) {
+                                                //your was correct so we have some information to display
+                                                if (data.success) {
+                                                    location.reload();
+                                                }
+                                            },
+
+                                            //If there was no resonse from the server
+                                            error: function (jqXHR, textStatus, errorThrown) {
+                                                console.log("Something really bad happened " + textStatus);
+                                                $("#productError@agent.id").html('Please select product!');
+                                                $("#loadingA@agent.id").html('');
+                                            },
+
+                                            //capture the request before it was sent to server
+                                            beforeSend: function (jqXHR, settings) {
+                                                //adding some Dummy data to the request
+                                                $("#loadingA@agent.id").html("<div class='sk-bounce1'></div> <div class='sk-bounce2'></div> <div class='sk-bounce3'></div>");
+                                            },
+
+                                            //this is called after the response or error functions are finished
+                                            //so that we can take some action
+                                            complete: function (jqXHR, textStatus) {
+                                                //enable the button
+                                            }
+
+                                        });
+
+                                    }
+                                </script>
+                                </td>
+                                <td>
+                                @agent.created().format("dd MMM, yyyy")
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="panel-footer">
+                <div class="row">
+                    <div class="col-sm-4 hidden-xs">
+
+                    </div>
+                    <div class="col-sm-3 text-center">
+                    </div>
+                    <div class="col-sm-5 text-right">
+                    @inc.pager(total)
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @styles = {
+    }
+
+    @scripts = {
+
+        <script>
+
+            function setFields(id)
+        {
+            $('#agent').val(id);
+        }
+
+        function addCredit () {
+                                    //Stops the submit request
+                                    $("#addCreditForm").submit(function (e) {
+                                            e.preventDefault();
+                                        });
+
+                                        //get the form data and then serialize that
+                                        dataString = $("#addCreditForm").serialize();
+
+                                        //make the AJAX request, dataType is set to json
+                                        //meaning we are expecting JSON data in response from the server
+                                        $.ajax({
+                                            type: "POST",
+                                            url: "@routes.AdminCrudController.addCredit()",
+                                            data: dataString,
+                                            dataType: "json",
+
+                                            //if received a response from the server
+                                            success: function (data, textStatus, jqXHR) {
+                                                //your was correct so we have some information to display
+                                                if (data.success) {
+                                                    location.reload();
+                                                }
+                                            },
+
+                                            //If there was no resonse from the server
+                                            error: function (jqXHR, textStatus, errorThrown) {
+                                                console.log("Something really bad happened " + errorThrown);
+                                                $("#creditError").html('Enter an amount!');
+                                                $("#loadingC").html('');
+                                            },
+
+                                            //capture the request before it was sent to server
+                                            beforeSend: function (jqXHR, settings) {
+                                                //adding some Dummy data to the request
+                                                $("#loadingC").html("<div class='sk-bounce1'></div> <div class='sk-bounce2'></div> <div class='sk-bounce3'></div>");
+                                            },
+
+                                            //this is called after the response or error functions are finished
+                                            //so that we can take some action
+                                            complete: function (jqXHR, textStatus) {
+                                                //enable the button
+                                            }
+
+                                        });
+
+                                    }
+
+        </script>
+
+    }

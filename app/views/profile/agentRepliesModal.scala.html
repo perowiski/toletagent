@@ -1,0 +1,58 @@
+@(replies: List[AgentConnectReply])
+
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <span>Replies</span>
+        </div>
+        <div class="modal-body">
+            <table class="table table-striped" id="table-resp">
+                <thead>
+                    <tr>
+                        <th>Agent Details</th>
+                        <th>Message</th>
+                        <th>Date Replied</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for(reply <- replies) {
+                        <tr>
+                            <td>
+                                <a href="#" data-href="@routes.AgentConnectsController.replier(reply.id)" class="view-replier btn btn-info">View Sender's Details</a>
+                            </td>
+                            <td>
+                                @reply.message
+                            </td>
+                            <td>
+                                @reply.created.format("dd-MM-yyyy")
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Ok</button>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $(".view-replier").on('click', function(){
+            $("#replier-modal").html("");
+            $('#ajaxWait').show();
+            jQuery.ajax({
+                url : $(this).attr("data-href"),
+                success : function(data) {
+                    $("#replier-modal").html(data);
+                    $('#replier-modal').modal('show');
+                    $("#ajaxWait").hide();
+                }
+            });
+            return false;
+        });
+    });
+</script>

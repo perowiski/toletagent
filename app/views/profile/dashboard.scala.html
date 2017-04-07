@@ -1,0 +1,332 @@
+@(map: Map[String, Object])
+
+@client = @{
+    map.get("client").asInstanceOf[Long]
+}
+@balance = @{
+    map.get("balance").asInstanceOf[Double]
+}
+
+@profile.layout("Home page", styles = styles, scripts = scripts) {
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="col-lg-4">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <h5>Client Received</h5>
+                        <h2>@client</h2>
+                        <div class="progress progress-mini">
+                            @*<div style="width: 78%;" class="progress-bar"></div>*@
+                        </div>
+
+                        <div class="m-t-sm small">Client Received</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <h5>Cash Balance</h5>
+                        <h2>@formatters.AmtFormatter.format(balance)</h2>
+                        <div class="progress progress-mini">
+                            <div style="width: 78%;" class="progress-bar"></div>
+                        </div>
+
+                        <div class="m-t-sm small">Cash Balance</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <h5>Leads Credit</h5>
+                        <h2>0</h2>
+                        <div class="progress progress-mini">
+                            <div style="width: 78%;" class="progress-bar"></div>
+                        </div>
+
+                        <div class="m-t-sm small">Leads Credit</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+
+
+            <div class="col-lg-6">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <div id="donutchart" style="height: 300px"></div>
+                    </div>
+                </div>
+            </div>
+
+                <div class="col-lg-6">
+                    <div class="ibox">
+                        <div class="ibox-content">
+                        <div id="donutchart2" style="height: 300px"></div>
+                </div>
+            </div>
+                </div>
+                    <div class="col-lg-6">
+                        <div class="ibox">
+                            <div class="ibox-content">
+                        <div id="donutchart3" style="height: 300px"></div>
+                            </div>
+                        </div>
+                    </div>
+        <div class="col-lg-6">
+            <div class="ibox">
+                <div class="ibox-content">
+                    <div id="piechart" style="height: 300px"></div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="col-lg-12">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <h5>Your Properties Per Areas</h5>
+                        <div class="embed-responsive-item">
+                        <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+}
+
+@styles = {
+}
+
+@scripts = {
+
+        <!-- Custom and plugin javascript -->
+    <script src="@StaticAssets.getUrl("js/inspinia.js")"></script>
+    <script src="@StaticAssets.getUrl("js/plugins/pace/pace.min.js")"></script>
+
+        <!-- Flot -->
+        @*<script src="@StaticAssets.getUrl("js/plugins/flot/jquery.flot.js")"></script>
+        <script src="@StaticAssets.getUrl("js/plugins/flot/jquery.flot.tooltip.min.js")"></script>
+        <script src="@StaticAssets.getUrl("js/plugins/flot/jquery.flot.resize.js")"></script>
+        <script src="@StaticAssets.getUrl("js/plugins/flot/jquery.flot.pie.js")"></script>*@
+
+        <!-- ChartJS-->
+    <script src="@StaticAssets.getUrl("js/plugins/chartJs/Chart.min.js")"></script>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script>
+
+            var json = (function () {
+                var json = null;
+                $.ajax({
+                    'async': false,
+                    'global': false,
+                    'url': "@routes.AgentDashboardController.propertyCount()",
+                    'dataType': "json",
+                    'success': function (data) {
+                        json = data;
+                    }
+                });
+                return json;
+            })();
+
+            var json2 = (function () {
+                var json = null;
+                $.ajax({
+                    'async': false,
+                    'global': false,
+                    'url': "@routes.AgentDashboardController.propertyRentedForAgent()",
+                    'dataType': "json",
+                    'success': function (data) {
+                        json2 = data;
+                    }
+                });
+                return json2;
+            })();
+
+            var json3 = (function () {
+                var json = null;
+                $.ajax({
+                    'async': false,
+                    'global': false,
+                    'url': "@routes.AgentDashboardController.propertySoldForAgent()",
+                    'dataType': "json",
+                    'success': function (data) {
+                        json3 = data;
+                    }
+                });
+                return json3;
+            })();
+
+            var json4 = (function () {
+                var json = null;
+                $.ajax({
+                    'async': false,
+                    'global': false,
+                    'url': "@routes.AgentDashboardController.mostRequestedAreasForAgent()",
+                    'dataType': "json",
+                    'success': function (data) {
+                        json4 = data;
+                    }
+                });
+                return json4;
+            })();
+
+            $(function () {
+                google.charts.load("current", {packages: ["corechart"]});
+                google.charts.setOnLoadCallback(drawChart);
+                function drawChart() {
+                    var data = google.visualization.arrayToDataTable([
+                        ['Label', 'Count'],
+                        ['Rented', json.rented],
+                        ['Sold', json.sold]
+                    ]);
+
+                    var options = {
+                        title: 'Total Properties',
+                        legend: 'labeled'
+                    };
+
+                    var chart = new google.visualization.PieChart(document.getElementById('donutchart'));
+                    chart.draw(data, options);
+                }
+
+                google.charts.load("current", {packages: ["corechart"]});
+                google.charts.setOnLoadCallback(drawChart2);
+                function drawChart2() {
+                    var data = google.visualization.arrayToDataTable([
+                        ['Label', 'Count'],
+                        ['Rented', json2.rented],
+                        ['Available', json2.available]
+                    ]);
+
+                    var options = {
+                        title: 'Rental Properties',
+                        legend: 'labeled'
+                    };
+
+                    var chart = new google.visualization.PieChart(document.getElementById('donutchart2'));
+                    chart.draw(data, options);
+                }
+
+
+                google.charts.load("current", {packages: ["corechart"]});
+                google.charts.setOnLoadCallback(drawChart3);
+                function drawChart3() {
+                    var data = google.visualization.arrayToDataTable([
+                        ['Label', 'Count'],
+                        ['Rented', json3.sold],
+                        ['Available', json3.available]
+                    ]);
+
+                    var options = {
+                        title: 'Rental Properties',
+                        legend: 'labeled'
+                    };
+
+                    var chart = new google.visualization.PieChart(document.getElementById('donutchart3'));
+                    chart.draw(data, options);
+                }
+
+                var area = [];
+                var area_count = [];
+                $.each(json4, function (key, value) {
+                    area.push(key);
+                    area_count.push(Number(value));
+                });
+
+                google.charts.load("current", {packages:["corechart"]});
+                google.charts.setOnLoadCallback(drawChart4);
+                function drawChart4() {
+                    var data = google.visualization.arrayToDataTable([
+                        ['Language', 'Speakers (in millions)'],
+                        [area[0],  area_count[0]],
+                        [area[1],  area_count[1]],
+                        [area[2], area_count[2]],
+                        [area[3], area_count[3]],
+                        [area[4], area_count[4]]
+                    ]);
+
+                    var options = {
+                        legend: 'labeled',
+                        pieSliceText: 'label',
+                        title: '5 Most Requested Areas',
+                        pieStartAngle: 100,
+                    };
+
+                    var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+                    chart.draw(data, options);
+                }
+
+
+            });
+
+
+            var json5 = (function () {
+                var json = null;
+                $.ajax({
+                    'async': false,
+                    'global': false,
+                    'url': "@routes.AgentDashboardController.propertyPerAreaForAgent()",
+                    'dataType': "json",
+                    'success': function (data) {
+                        json5 = data;
+                    }
+                });
+                return json5;
+            })();
+
+            var label = [];
+            var value_ = [];
+            $.each(json5, function (key, value) {
+                //console.log(key, value);
+                label.push(key);
+                value_.push(value);
+            });
+
+            var barData = {
+                labels: label,
+                datasets: [
+                    {
+                        fillColor: "red",
+                        data: value_
+                    }
+                ]
+            }
+
+            var barOptions = {
+                scaleBeginAtZero: true,
+                scaleShowGridLines: true,
+                scaleGridLineColor: "rgba(0,0,0,.05)",
+                scaleGridLineWidth: 1,
+                barShowStroke: true,
+                barStrokeWidth: 2,
+                barValueSpacing: 3,
+                barDatasetSpacing: 1,
+                responsive: true
+
+            }
+
+
+            var ctx = document.getElementById("barChart").getContext("2d");
+            var myNewChart = new Chart(ctx).Bar(barData, barOptions);
+
+            var colors = ["#004d99", "#0066cc", "#0080ff", "blue", "#66b3ff", "gray", "#e6f2ff", "#003366", "#004d99", "#0066cc", "#0080ff",
+                "blue", "#66b3ff", "gray", "#e6f2ff", "#003366", "#004d99", "#0066cc", "#0080ff", "#0080ff"];
+
+            for (i = 0; i < label.length; i++) {
+                myNewChart.datasets[0].bars[i].fillColor = colors[i]; //bar n
+            }
+            myNewChart.update();
+
+    </script>
+
+}

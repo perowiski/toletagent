@@ -1,0 +1,252 @@
+@(map: Map[String, Object])
+
+@import play.mvc.Http;
+@import models_enums.AgentConnectType._
+
+@request = @{Http.Context.current().request()}
+@path = @{Http.Context.current().request().path()}
+
+@connects = @{map.get("connects").asInstanceOf[java.util.List[AgentConnect]]}
+@total = @{map.get("total").asInstanceOf[Long]}
+@page = @{map.get("page").asInstanceOf[String]}
+
+@profile.layout("Agent Messages", styles = styles, scripts = scripts) {
+    <div class="alert alert-info">
+        <span>My @page messages (@total total)</span>
+    </div>
+
+    @if(flash.containsKey("message")) {
+        <div class="alert alert-info">@flash.get("message")</div>
+    }
+    <div class="panel">
+        <div class="panel panel-heading">
+            <div class="row">
+                <div class="col-md-8">
+                    @if("Sent".equals(page)) {
+                        <a href="@routes.AgentRequestsController.create()" class="btn btn-info"><i class="fa fa-send"></i> Advertise leads to agents</a>
+                        <a href="@routes.AgentBriefsController.create()" class="btn btn-success"><i class="fa fa-send"></i> Advertise properties to agents</a>
+                    }
+                </div>
+                <div class="col-md-4">
+                    <form action="@path" class="form-inline text-right">
+                        <div class="form-group">
+                            <input type="text" name="daterange" value="" class="form-control" placeholder="Filter by date added" readonly/>
+                        </div>
+                        <button type="submit" class="btn btn-default">Search</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="panel-body">
+            <table class="table table-striped" id="table-resp">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Details</th>
+                        <th>Other Details</th>
+                        <th>Date Sent</th>
+                        <th>Replies</th>
+                        @if("Received".equals(page)) {
+                            <th>From</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                @for(connect <- connects) {
+                    <tr>
+                        <td>
+                            <span class="label label-warning">@page
+                                @{connect.`type`.getRep}</span>
+                        </td>
+                        <td style="max-width: 300px;">
+                            @if(CLIR.equals(connect.`type`) && connect.request != null) {
+                                @if(connect.request.mode != null) {
+                                    <span class="label label-info">Category: @connect.request.mode</span><br/>
+                                }
+                                @if(connect.request.maxBudget != null) {
+                                    <span class="label label-info">Maximum Budget: @formatters.AmtFormatter.format(connect.request.maxBudget)</span><br/>
+                                }
+                                @if(connect.request.beds != null) {
+                                    <span class="label label-info">No of beds: @connect.request.beds</span><br/>
+                                }
+                                @if(connect.request.state != null) {
+                                    <button class="btn btn-xs btn-success">Preferred State: @connect.request.state</button>
+                                }
+
+                                @if(connect.request.axises != null && !connect.request.axises.isEmpty) {
+                                    <button type="button" class="btn btn-xs btn-info" data-toggle="modal" href="#@connect.request.id-axises-modal">View Preferred Localities</button>
+                                    <div id="@connect.request.id-axises-modal" class="modal fade">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                                    <span>Preferred Localities</span>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <span class="text-info">
+                                                    @for(axis <- connect.request.axises) {
+                                                        @axis,
+                                                    }
+                                                    </span>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button class="btn btn-info" type="button" data-dismiss="modal">Ok</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                }
+                            }
+                            @if(BRIR.equals(connect.`type`) && connect.brief != null) {
+                                @if(connect.brief.mode != null) {
+                                    <span class="label label-info">Brief is @connect.brief.mode.getRep</span><br/>
+                                }
+                                @if(connect.brief.price != null) {
+                                    <span class="label label-info">Price of brief: @formatters.AmtFormatter.format(connect.brief.price)</span><br/>
+                                }
+                                @if(Utility.isNotEmpty(connect.brief.address())) {
+                                    <span class="label label-info">Brief Locality: @connect.brief.address()</span><br/>
+                                }
+                                @if(connect.brief.beds != null) {
+                                    <span class="label label-info">No of beds: @connect.brief.beds</span><br/>
+                                }
+                                @if(connect.brief.`type` != null) {
+                                    <span class="label label-success">Brief type: @{connect.brief.`type`}</span>
+                                }
+                            }
+
+                            @if(PROP.equals(connect.`type`) && connect.pid != null) {
+                                <a class="label label-info" href="#" target="_blank">View Property: @connect.pid</a>
+                            }
+                        </td>
+                        <td>
+                            @if(CLIR.equals(connect.`type`) && connect.request != null) {
+                                @connect.request.comment
+                            }
+                            @if(BRIR.equals(connect.`type`) && connect.brief != null) {
+                                @connect.brief.comment
+                            }
+                            @if(PROP.equals(connect.`type`) && Utility.isNotEmpty(connect.message)) {
+                                @connect.message
+                            }
+                        </td>
+                        <td>
+                            @connect.created.format("dd-MM-yyyy")
+                        </td>
+                        <td>
+                            @if("Received".equals(page)) {
+                                @if(!connect.responded()) {
+                                    <button type="button" class="btn btn-xs btn-info" data-toggle="modal" href="#@connect.id-reply-modal">Reply to message</button>
+                                    <div id="@connect.id-reply-modal" class="modal fade">
+                                        <div class="modal-dialog">
+                                            <form action="@routes.AgentConnectsController.reply(connect.id)" method="post" class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                                    <h3>Reply to message</h3>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <textarea class="form-control" name="message" placeholder="Optionally include a response message"></textarea>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-info send-reply">Reply to message</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                } else {
+                                    <span class="label label-success">Replied Already</span>
+                                }
+                            } else {
+                                <span class="label label-success">Total replies is @AgentConnectsController.replyCount(connect.id)</span>
+                                <button type="button" class="btn btn-xs btn-info view-replies" data-href="@routes.AgentConnectsController.replies(connect.id)">View Replies</button>
+                            }
+                        </td>
+                        @if("Received".equals(page)) {
+                            <td><a href="#" target="_blank">@connect.fromAgent</a></td>
+                        }
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <footer class="panel-footer">
+            <div class="row">
+                <div class="col-sm-4 hidden-xs">
+                </div>
+                <div class="col-sm-3 text-center">
+                        <!--<small class="text-muted inline m-t-small m-b-small">showing 20-30 of 50 items</small>-->
+                </div>
+                <div class="col-sm-5 text-right text-center-sm">
+                @inc.pager(total)
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <div class="modal fade" id="replies-modal">
+
+    </div>
+
+    <div class="modal fade" id="replier-modal">
+
+    </div>
+}
+
+@styles = {
+    <link rel="stylesheet" href="@StaticAssets.getUrl("daterange/daterangepicker.css")" />
+}
+
+@scripts = {
+    <script src="@StaticAssets.getUrl("daterange/moment.min.js")"></script>
+    <script src="@StaticAssets.getUrl("daterange/daterangepicker.js")"></script>
+
+    <script type="text/javascript">
+            $(document).ready(function() {
+                $(".send-reply").click(function() {
+                    var form = $(this).closest("form");
+                    //var obj = form.serializeArray().reduce(function(obj, v) { obj[v.name] = v.value; return obj; }, { });
+                    $('#ajaxWait').show();
+                    jQuery.ajax({
+                        type: "POST",
+                        url : form.attr("action"),
+                        data : form.serialize(),
+                        success : function(data) {
+                            if (data == "success") {
+                                $("#info-box").html("You have successfully sent a response to the sender");
+                                $("#ajaxWait").hide();
+                                $('#info-modal').modal('show');
+                            }
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 3000);
+                        }
+                    });
+                    return false;
+                });
+
+                $(".view-replies").click(function() {
+                    $("#replies-modal").html("");
+                    $('#ajaxWait').show();
+                    jQuery.ajax({
+                        url : $(this).attr("data-href"),
+                        success : function(data) {
+                            $("#replies-modal").html(data);
+                            $('#replies-modal').modal('show');
+                            $("#ajaxWait").hide();
+                        }
+                    });
+                    return false;
+                });
+
+                $('input[name="daterange"]').daterangepicker({
+                    autoApply: true,
+                    locale: {
+                        format: 'DD-MM-YYYY'
+                    }
+                });
+                $('input[name="daterange"]').val("");
+            });
+    </script>
+}
+

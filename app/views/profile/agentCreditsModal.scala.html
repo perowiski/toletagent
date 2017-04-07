@@ -1,0 +1,35 @@
+@(credits: List[AgentCredit])
+
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <span>Replies</span>
+        </div>
+        <div class="modal-body">
+            <table class="table table-striped" id="table-resp">
+                <thead>
+                    <tr>
+                        <th>Amount Added</th>
+                        <th>Date Added</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for(credit <- credits) {
+                        <tr>
+                            <td>
+                                ₦ @formatters.AmtFormatter.format(credit.amount)
+                            </td>
+                            <td>
+                                @credit.created.format("dd-MM-yyyy:HH:mm")
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Ok</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,81 @@
+@(cForm: Form[AgentCredit], credit: AgentCredit)
+
+@import fields._
+@import scala.collection.immutable.Map
+
+@layout("Add Credit", styles=styles, scripts=scripts) {
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Credit Form
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-8 col-md-offset-2">
+                    <form method="post" action="">
+                        <div class="col-md-6">
+                            @f_text(
+                                cForm("search2"),
+                                "Agent",
+                                "search2",
+                                Map("id"-> "search2","aria-label"->"Text input with dropdown button","placeholder"->"Agent","required" -> "required"),
+                                ""
+                            )
+                            <div id="suggesstion-box" style="background-color: #F5F5F6"></div>
+                        </div>
+                        <div class="col-md-6">
+                        @f_text(
+                            cForm("amount"),
+                            "Amount",
+                            "number",
+                            Map("placeholder"->"Amount","required" -> "required"),
+                            ""
+                        )
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">Submit</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+}
+
+@styles = {
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+}
+
+@scripts = {
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <script>
+
+    $("#search").autocomplete({
+    source: function (request, response) {
+        var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
+        $.ajax({
+            type: "GET",
+            url: "/agents",
+            data:'search=' + $('#search').val(),
+            success: function (data) {
+                response($.map(data, function(v,i){
+                    var text = v.username;
+                    if ( text && ( !request.term || matcher.test(text) ) ) {
+                        return {
+                                //label: v.username,
+                                value: v.username
+                               };
+                    }
+                }));
+            }
+        });
+    }
+});
+
+</script>
+}

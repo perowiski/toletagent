@@ -1,0 +1,30 @@
+@(total: Long, limit: Int = 50)
+@import play.mvc.Http
+@request = @{Http.Context.current().request()}
+@pager = @{
+    val param = Utility.getParam(limit)
+    new pojos.Pager(total, param.getPage(), param.getSize())
+}
+
+<ul class="pagination">
+    @if(pager.hasPrev) {
+        <li><a href="@UriUtil.getPagedUrl(request.uri, pager.getPage() - 1)" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
+    }
+    @for(head <- pager.getList.headOption){
+        @if(head>1) { <li><a>...</a></li> }
+    }
+    @for(page <- pager.getList) {
+        @if(page == (pager.getPage() + 1)){
+            <li class="active"><a href="#">@page</a></li>
+        } else {
+            <li><a href="@UriUtil.getPagedUrl(request.uri, page - 1)">@page</a></li>
+        }
+    }
+    @for(last <- pager.getList.lastOption){
+        @if(last < pager.getTotalPages) { <li><a>...</a></li> }
+    }
+
+    @if(pager.hasNext) {
+        <li><a href="@UriUtil.getPagedUrl(request.uri, pager.getPage() + 1)" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>
+    }
+</ul>

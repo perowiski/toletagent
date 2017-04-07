@@ -1,0 +1,107 @@
+@import models_enums.AgentProduct
+@(map: Map[String, Object])
+
+@import play.mvc.Http;
+
+@request = @{Http.Context.current().request()}
+@path = @{Http.Context.current().request().path()}
+
+@clients = @{map.get("clients").asInstanceOf[java.util.List[AgentClient]]}
+@total = @{map.get("total").asInstanceOf[Long]}
+
+@agent = @{Auth.getAgent}
+
+@profile.leadContainer("Client Database", styles = styles, scripts = scripts) {
+    <div class="alert alert-info">
+        <span class="">My Client Database (@total total)</span>
+    </div>
+
+    <div class="panel">
+        <div class="panel panel-heading">
+            <div class="row">
+                <div class="col-md-6">
+                    <a href="@routes.AgentClientsController.add()" class="btn btn-info"><i class="fa fa-plus"></i> Add New Client</a>
+                </div>
+                <form action="@path" class="form-inline col-md-6 text-right">
+                    <div class="form-group">
+                        <input type="text" name="search" class="input-sm form-control" placeholder="Search">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="daterange" value="" class="form-control" placeholder="Filter by date added" readonly/>
+                    </div>
+                    <button type="submit" class="btn btn-default">Search</button>
+                </form>
+            </div>
+        </div>
+        <div class="panel-body">
+            <table class="table table-striped" id="table-resp">
+                <thead>
+                    <tr>
+                        <th>Person Details</th>
+                        <th>Request Details</th>
+                        <th>Date Created</th>
+                        <th>Action</th>
+                        @if(Auth.getAgent.products.contains(AgentProduct.SI)) {
+                            <th>Inspection</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                @for(client <- clients) {
+                    <tr>
+                        <td>
+                            <span class="label label-info">@client.name</span><br/>
+                            <span class="label label-success">@client.phone</span>
+                            <span class="label label-warning">@client.email</span>
+                        </td>
+                        <td>
+                            @if(client.maxBudget != null) {
+                                <span class="label label-info">Maximum Budget: @formatters.AmtFormatter.format(client.maxBudget)</span><br/>
+                            }
+                            @if(client.minBudget != null) {
+                                <span class="label label-info">Minimum Budget: @formatters.AmtFormatter.format(client.minBudget)</span><br/>
+                            }
+                            @if(Utility.isNotEmpty(client.source)) {
+                                <span class="label label-info">Source of Client: @client.source</span><br/>
+                            }
+                            @if(Utility.isNotEmpty(client.pid)) {
+                                <span class="label label-info">Pid(s): @client.pid</span>
+                            }
+                        </td>
+                        <td>
+                            @client.created.format("dd MMM, yyyy")
+                        </td>
+                        <td>
+                           <a href="@routes.AgentClientsController.edit(client.id)" class="btn btn-xs btn-default"><i class="fa fa-edit"></i> Edit</a>
+                        </td>
+                        <td>
+                        @profile.scheduleInspectionModal(client.name, "client", client.id)
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <footer class="panel-footer">
+            <div class="row">
+                <div class="col-sm-4 hidden-xs">
+                </div>
+                <div class="col-sm-3 text-center">
+                        <!--<small class="text-muted inline m-t-small m-b-small">showing 20-30 of 50 items</small>-->
+                </div>
+                <div class="col-sm-5 text-right text-center-sm">
+                @inc.pager(total)
+                </div>
+            </div>
+        </footer>
+    </div>
+
+}
+
+@styles = {
+}
+
+@scripts = {
+}
+
+

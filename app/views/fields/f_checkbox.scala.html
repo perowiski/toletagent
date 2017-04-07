@@ -1,0 +1,11 @@
+@(field: Field, 
+	label: String = ""
+)
+
+<div class="checkbox @if(field.hasErrors) {has-error} @field.id">
+    <label>
+      <input type="checkbox" name="@field.name" @if(field.value.getOrElse("") == "on")  {checked}/>
+        <small class="chk">@label</small>
+    </label>
+    <span class="help-block">@{field.error.map { error => error.message  }}</span>
+</div>

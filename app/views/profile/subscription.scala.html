@@ -1,0 +1,160 @@
+@import java.util
+@(modelMap :util.Map[String, Object])
+@subscription = @{modelMap.get("subscription").asInstanceOf[Subscription]}
+@subscriptionPaymentTopUp = @{modelMap.get("subscriptionPaymentTopUp").asInstanceOf[SubscriptionPaymentTopUp]}
+@pendingSubscription = @{modelMap.get("pendingSubscription").asInstanceOf[Subscription]}
+@pendingSubscriptionPaymentTopUp = @{modelMap.get("pendingSubscriptionPaymentTopUp").asInstanceOf[SubscriptionPaymentTopUp]}
+
+@today = @{new Date() }
+
+@profile.layout("Subscription Information"){
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <p>
+
+                @if(subscription.expiryDate != null){
+                    @if(today.after(subscription.expiryDate)){
+                        <a href="@routes.AgentSubscriptionController.renewPlan()" class="btn btn-success btn-sm">
+                            Renew Plan</a>
+                    }
+                }
+
+                <a href="@routes.AgentSubscriptionController.changePlan()" class="btn btn-warning btn-sm">
+                    Change Plan/Upgrade</a>
+
+                <a href="@routes.AgentSubscriptionController.topUpProduct()" class="btn btn-info btn-sm">
+                    Top-Up Products</a>
+            </p>
+
+        </div>
+        <div class="panel-body">
+
+            <div class="alert alert-info" role="alert">
+                @if(subscription.expiryDate != null){
+                    @if(today.after(subscription.expiryDate)){
+                        Your @subscription.duration day(s) @subscription.name subscription that runs from @subscription.activationDate to @subscription.expiryDate has expired. Renew or Upgrade plan now.
+                    }else{
+                        You are currently on @subscription.name plan. Your @subscription.duration day(s) subscription runs from @subscription.activationDate to @subscription.expiryDate
+                    }
+                }else{
+                    You are currently on @subscription.name plan.
+                }
+
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-heading">Subscription Products</div>
+
+                <div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product Type</th>
+                                <th>Number Of Unit(s)</th>
+                                <th>Available Unit(s)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for(subscriptionProduct <- subscription.products){
+                                <tr>
+                                    <td>@subscriptionProduct.productType.name</td>
+                                    <td>@subscriptionProduct.maximum</td>
+                                    <td>@subscriptionProduct.remainder</td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+
+            @if(subscriptionPaymentTopUp != null){
+                <div class="panel panel-default">
+                    <div class="panel-heading">Top Up Products</div>
+
+                    <div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Product Type</th>
+                                    <th>Number Of Unit(s)</th>
+                                    <th>Available Unit(s)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @for(subscriptionPaymentTopUpProduct <- subscriptionPaymentTopUp.products){
+                                <tr>
+                                    <td>@subscriptionPaymentTopUpProduct.productType.name</td>
+                                    <td>@subscriptionPaymentTopUpProduct.maximum</td>
+                                    <td>@subscriptionPaymentTopUpProduct.remainder</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            }
+
+            @if(pendingSubscription != null){
+                <div class="panel panel-warning">
+                    <div class="panel-heading">Pending Subscription</div>
+                    <div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Product Type</th>
+                                    <th>Number Of Unit(s)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            @for(pendingSubscriptionProduct <- pendingSubscription.products){
+                                <tr>
+                                    <td>@pendingSubscriptionProduct.productType.name</td>
+                                    <td>@pendingSubscriptionProduct.maximum</td>
+                                </tr>
+                            }
+
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            }
+
+            @if(pendingSubscriptionPaymentTopUp != null){
+                <div class="panel panel-warning">
+                    <div class="panel-heading">Pending Top Up Products</div>
+
+                    <div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Product Type</th>
+                                    <th>Number Of Unit(s)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @for(pendingSubscriptioTopUpProduct <- pendingSubscriptionPaymentTopUp.products){
+                                <tr>
+                                    <td>@pendingSubscriptioTopUpProduct.productType.name</td>
+                                    <td>@pendingSubscriptioTopUpProduct.maximum</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    </div>
+}
+
+
+
+

@@ -1,0 +1,75 @@
+@(admins: List[Admin], total: Long)
+@import play.mvc.Http;
+@request = @{Http.Context.current().request()}
+@path = @{Http.Context.current().request().path()}
+
+@layout("Admins") {
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Admins' Table  (Total: @total)
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="row text-small">
+                        <div class="col-sm-4">
+                            <a href="@routes.AdminCrudController.add()" class="btn btn-info">Create Admin</a>
+                        </div>
+                        <div class="col-sm-4">
+                        </div>
+                        <form action="@routes.AdminCrudController.index()" class="col-sm-4 form-inline">
+                            <div class="input-group">
+                                <input type="text" name="search" value="@Utility.getQuery("search2")" class="form-control" placeholder="Search">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-sm" type="submit">Go!</button>
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                    <table class="table table-striped text-small">
+                        <thead>
+                            <tr>
+                                <th width="20"><input type="checkbox"></th>
+                                <th>Detail</th>
+                                <th>Role</th>
+                                <th>Settings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @for(admin <- admins) {
+                            <tr>
+                                <td><input type="checkbox" name="admin[]" value="@admin.id"></td>
+                                <td>
+                                    @admin.name<br/>
+                                    @admin.email<br/>
+                                    @admin.created.format("dd MMM, yyyy")
+                                </td>
+                                <td>
+
+                                </td>
+                                <td>
+                                    <a class="btn btn-info btn-xs" href="@routes.AdminCrudController.edit(admin.id)">
+                                        <i class="fa fa-edit"></i> edit
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                <footer class="panel-footer">
+                    <div class="row">
+                        <div class="col-sm-4 hidden-xs">
+
+                        </div>
+                        <div class="col-sm-3 text-center">
+                        </div>
+                        <div class="col-sm-5 text-right">
+                        @inc.pager(total)
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,19 @@
+@(field: Field,
+	label: String,
+	options: Map[String, String]
+)
+
+<div class="form-group @if(field.hasErrors) {has-error}">
+    <label class="col-lg-3 control-label">@label</label>
+    <div class="col-lg-4">
+        <select name="@field.name" class="form-control" multiple>
+            <option value="">Choose</option>
+            @for((value, name) <- options) {
+                <option value="@value" @if(field.value.getOrElse("") == value) {selected}>@name</option>
+            }
+        </select>
+        @if(field.hasErrors) {
+            <span class="help-block">@{field.error.map { error => error.message }}</span>
+        }
+    </div>
+</div>

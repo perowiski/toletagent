@@ -1,0 +1,23 @@
+@(field: Field,
+	label: String,
+	range: Range,
+    default: String = ""
+)
+
+
+<div class="form-group @if(field.hasErrors) {has-error}">
+    <label>@label</label>
+    <select name="@field.name" class="form-control">
+        <option value="@default">--select--</option>
+        @for(i <- range) {
+            @if(Utility.isNumeric(field.value.getOrElse("0"))) {
+                <option value="@i" @if(field.value.getOrElse("0").toInt == i) {selected = "selected"}>@i </option>
+            } else {
+                <option value="@i">@i </option>
+            }
+        }
+    </select>
+    @if(field.hasErrors) {
+        <span class="help-block">@{field.error.map { error => error.message }}</span>
+    }
+</div>

@@ -1,0 +1,9 @@
+@(mode: String)
+
+@agent = @{Auth.getAgent}
+
+@uuid = @{Cookies.get(AuthController.BAU)}
+
+@profile.frame("My Listings for " + mode) {
+    <iframe src="https://api.tolet.com.ng/profile_list_@mode?aid=@agent.id&uuid=@uuid"></iframe>
+}

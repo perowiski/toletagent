@@ -1,0 +1,91 @@
+@import java.util
+@import models_enums.AgentProduct
+@(services: List[Service], total: Long)
+
+@import fields._
+@import scala.collection.immutable.Map
+
+@import play.mvc.Http;
+@request = @{
+    Http.Context.current().request()
+}
+@path = @{
+    Http.Context.current().request().path()
+}
+
+@*
+@profile.layout("Agent Services", styles = styles, scripts = scripts) {
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Agents' Service Table  (Total: @total)
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="row text-small">
+                        <div class="col-sm-4">
+                            <a class="btn btn-label btn-danger btn-lg"  href="@routes.ServiceController.add()">Add Service</a>
+                        </div>
+                        <div class="col-sm-4">
+                        </div>
+
+
+                        <form action="@routes.ServiceController.service()" class="col-sm-4 form-inline">
+                            <div class="input-group">
+                                <input type="text" name="search" value="@Utility.getQuery("search2")" class="form-control" placeholder="Search">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-sm" type="submit">Go!</button>
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <table class="table table-striped text-small">
+                    <thead>
+                        <tr>
+                            <th width="20"><input type="checkbox"></th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @for(service <- services) {
+                        <tr>
+                            <td><input type="checkbox" name="service[]" value=""></td>
+                            <td>
+                                @service.name <br/>
+                            </td>
+                            <td>
+                                @service.description <br/>
+                            </td>
+                            <td>
+                                <a class="btn btn-label btn-primary btn-xs"  href="@routes.ServiceController.edit(service.id)">Update Service</a>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="panel-footer">
+            <div class="row">
+                <div class="col-sm-4 hidden-xs">
+
+                </div>
+                <div class="col-sm-3 text-center">
+                </div>
+                <div class="col-sm-5 text-right">
+                @inc.pager(total)
+                </div>
+            </div>
+        </div>
+    </div>
+}
+*@
+@styles = {
+}
+
+@scripts = {
+
+}

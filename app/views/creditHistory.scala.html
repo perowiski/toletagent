@@ -1,0 +1,73 @@
+
+@import java.util
+@(agentCredit: util.List[AgentCredit], total: Long)
+
+@import play.mvc.Http;
+@request = @{Http.Context.current().request()}
+@path = @{Http.Context.current().request().path()}
+
+
+@layout("Agent Credit History") {
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Agent Credit History' Table  (Total: @total)
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="row text-small">
+                        <div class="col-sm-4">
+                            Agent name:
+                        </div>
+                        <div class="col-sm-4">
+                        </div>
+                        <form action="" class="col-sm-4 form-inline">
+                            <div class="input-group">
+                                <input type="text" name="search" value="@Utility.getQuery("search2")" class="form-control" placeholder="Search agent">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-sm" type="submit">Go!</button>
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <table class="table table-striped text-small">
+                    <thead>
+                        <tr>
+                            <th width="20">No</th>
+                            <th>Credit</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @for((ac,i) <- agentCredit.zipWithIndex) {
+                        <tr>
+                            <td>@{i+1}</td>
+                            <td>
+                            @formatters.AmtFormatter.format(ac.amount)
+                            </td>
+                            <td>
+                            @ac.created.format("dd MMM, yyyy hh:mm:ss")
+                            </td>
+                            <td>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+                <footer class="panel-footer">
+                    <div class="row">
+                        <div class="col-sm-4 hidden-xs">
+
+                        </div>
+                        <div class="col-sm-3 text-center">
+                        </div>
+                        <div class="col-sm-5 text-right">
+                        @inc.pager(total)
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+}

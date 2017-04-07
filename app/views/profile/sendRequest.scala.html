@@ -1,0 +1,268 @@
+@(rForm: Form[AgentRequest], request: AgentRequest)
+
+@import scala.collection.immutable.Map
+@import models_enums.PropertyMode
+@import fields._
+
+@url = @{ if(request.id != null) routes.AgentRequestsController.update(request.id)
+else routes.AgentRequestsController.send() }
+
+@profile.layout("Send client request to other agents", scripts=scripts, styles=styles) {
+    <div class="panel panel-default" id="panel-section">
+        <div class="panel-heading">
+            Send your client request to other agents
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-12" id="sendrequestcontainer">
+                    <form action="@url" method="POST" id="req-form" class="col-md-offset-1 col-md-10">
+                        @if(rForm.hasErrors) {
+                            <div class="alert alert-danger">
+                                Please fill all required fields as indicated below
+                            </div>
+                        }
+
+                        <fieldset>
+                            <div class="row">
+                                <label class="control-label col-md-3">Choose a category</label>
+                                <div class="col-md-9">
+                                    @f_radiobuttons(
+                                        rForm("mode"),
+                                        rForm,
+                                        PropertyMode.select()
+                                    )
+                                </div>
+                            </div>
+                            <br/>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    @f_select_num(
+                                        rForm("beds"),
+                                        "No of Beds (if applicable)",
+                                        (1 to 10).reverse,
+                                        ""
+                                    )
+                                </div>
+                                
+                                <div class="col-md-4">
+                                @f_text(
+                                    rForm("maxBudget"),
+                                    "Client's Maximum budget",
+                                    "text",
+                                    Map("placeholder"->"e.g 300000 (comma is added for you)", "onkeyup" -> "this.value = numFormat(this.value)"),
+                                    ""
+                                )
+                                </div>
+                            </div>
+                            <br/><br/>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group @if(rForm("state").hasErrors) {has-error}">
+                                        <label class="control-label">Client's Preferred State</label>
+                                        <select name="state" id="state_select" class="form-control" required="required">
+                                            <option value="">Choose State</option>
+                                            @for((id, name) <- Selectors.selectStates()) {
+                                                <option value="@id" @if(rForm("state").value == id) {selected = "selected"}>@name</option>
+                                            }
+                                        </select>
+                                        <span class="help-block">@{rForm("state").error.map { error => error.message }}</span>
+                                    </div>                                   
+                                </div>
+                                <div class="col-md-10" id="axises1">
+                                    <div class="form-group">
+                                        <label class="control-label">Client's Preferred Localities</label>
+                                        <select name="axisList[]" id="axis_select" class="form-control" multiple="multiple">
+
+                                        </select>
+
+                                        <select id="axis_options" class="hidden hide">
+                                        @for((parent, options) <- Selectors.selectStateAxises()) {
+                                            @for((value, name) <- options) {
+                                                <option class="option_@parent select_option" value="@value" @if(rForm("axis").value == value) {selected = "selected"}>@name</option>
+                                            }
+                                        }
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <br/>
+
+                            <div class="row">
+                                <div class="form-group col-md-12 @if(rForm("comment").hasErrors) {has-error}">
+                                    <label class="control-label">Additional Details</label>
+                                    <textarea name="comment" rows="3" class="form-control">@rForm("comment").value</textarea>
+                                    <span class="help-block">@{rForm("comment").error.map { error => error.message }}</span>
+                                </div>
+                            </div>
+
+                        </fieldset>
+
+                        @if(request.id != null) {
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button class="btn btn-tolet pull-right" type="submit">Submit</button>
+                                </div>
+                            </div>
+                        } else  {
+                            <br/>
+                            <hr/>
+                            <br/>
+                            <fieldset>
+                                <legend>Select agents within the following locations to send request to</legend>
+                                <div class="row">
+
+                                    @{rForm("agentAxises[]").error.map { error =>
+                                        Html("""<div class="alert alert-danger col-md-12">
+                                            |'State' and 'Localities' of agents are compulsory.<br/>
+                                            |Please choose one or more localities of agents you want to send requests to.
+                                            |</div>""".stripMargin) }
+                                    }
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="control-label">State</label>
+                                            <select name="agentState" id="state2_select" class="form-control" required="required">
+                                                <option value="">Select State</option>
+                                                @for((id, name) <- Selectors.selectStates()) {
+                                                    <option value="@id">@name</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-10" id="axises2">
+                                        <div class="form-group" style="position: relative">
+                                            <label class="control-label">Localities</label>
+                                            <select name="agentAxises[]" id="axis2_select" multiple="multiple">
+                                            </select>
+
+                                            <select id="axis2_options" class="hidden hide">
+                                            @for((parent, options) <- Selectors.selectStateAxises()) {
+                                                @for((value, name) <- options) {
+                                                    <option class="option_@parent select_option" value="@value">@name</option>
+                                                }
+                                            }
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-danger errordisplay"></div>
+
+                                <br/>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <button id="sendBtn" name="submit" value="send" class="btn btn-tolet pull-right" type="submit">Send Request to Agents</button>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        }
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@styles = {
+    <link href="@StaticAssets.getUrl("multiselect/jquery.multiselect.css")" rel="stylesheet">
+    <style type="text/css">
+    label input[type=checkbox] {
+        display: inline-block !important;
+    }
+    #panel-section {
+        min-height: 1200px;
+    }
+    </style>
+}
+
+@scripts = {
+    <script src="@StaticAssets.getUrl("multiselect/jquery.multiselect.js")"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var options1 = {};
+            var options2 = {};
+
+            $('#axis_select').multiselect({
+                columns: 4,
+                texts: {
+                    placeholder: 'Select localities'
+                },
+                selectAll: true,
+                search: true,
+                minHeight: 300
+            });
+
+            $('#axis2_select').multiselect({
+                columns: 4,
+                texts: {
+                    placeholder: 'Select localities'
+                },
+                selectAll: true,
+                search: true,
+                minHeight: 300
+            });
+
+            var stateVal = $("#state_select").val();
+            if(stateVal !== "") {
+                axises();
+
+                @for((k, v) <- rForm.data()) {
+                    @if(k.startsWith("axisList")) {
+                        $("#"+options1['@v']).trigger('click');
+                    }
+                }
+
+            }
+
+            $("#state_select").change(function(){
+                axises();
+            });
+
+            function axises() {
+                var index = $("#state_select").val();
+                insertOptionsBase("", index, "axis");
+                $('#axis_select').multiselect('reload');
+
+                $("#state2_select").val(index);
+                insertOptionsBase("", index, "axis2");
+                $('#axis2_select').multiselect('reload');
+
+                $("#axises1 input[type='checkbox']").each(function( index ) {
+                    options1[$(this).val()] = $(this).attr("id");
+                });
+
+                $("#axises2 input[type='checkbox']").each(function( index ) {
+                    //alert($(this).val() + "-" + $(this).attr("id"));
+                    options2[$(this).val()] = $(this).attr("id");
+                });
+
+                $("#axises1 input[type='checkbox']").on('change', function(){
+                    var value = $(this).val();
+                    $("#"+options2[value]).trigger('click');
+                })
+            }
+
+            $("#state2_select").change(function(){
+                var index = $(this).val();
+                insertOptionsBase("", index, "axis2");
+                $('#axis2_select').multiselect('reload');
+            });
+
+            $("#sendBtn").click(function (e) {
+                $(".errordisplay").hide();
+
+                var values = $("#axis2_select").val();
+                if(values == null) {
+                    $(".errordisplay").html("Please choose one or more localities of agents you want to send requests to").show()
+                    e.preventDefault();
+                    return false;
+                }
+                return true;
+            })
+        });
+    </script>
+}

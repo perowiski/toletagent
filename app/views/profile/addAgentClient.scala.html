@@ -1,0 +1,154 @@
+@(cForm: Form[AgentClient], clientData: AgentClient)
+
+@import fields._
+@import scala.collection.immutable.Map
+
+
+@url = @{ if(clientData.id != null) routes.AgentClientsController.update(clientData.id)
+else routes.AgentClientsController.create() }
+
+@profile.layout("Add Client Information", scripts=scripts, styles=styles) {
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            @if(clientData.id != null) {
+                Edit @clientData.name's information
+            } else {
+                Add New Client Information
+            }
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-offset-2 col-md-6">
+                    <form method="post" action="@url">
+                        @if(cForm.hasGlobalErrors) {
+                            <div class="alert alert-danger">
+                            @for(er <- cForm.globalErrors()) {
+                                @er.message()
+                            }
+                            </div>
+                        }
+
+                        @if(flash.contains("success")) {
+                            <div class="alert alert-success">
+                            @flash.get("success")
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                @f_text(
+                                    cForm("name"),
+                                    "Name of Client",
+                                    "text",
+                                    Map("placeholder"->"Full Name", "required" -> "required"),
+                                    ""
+                                )
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                            @f_text(
+                                cForm("email"),
+                                "Email Address of Client",
+                                "text",
+                                Map("placeholder"->"Email Address"),
+                                ""
+                            )
+                            </div>
+
+                            <div class="col-md-6">
+                            @f_text(
+                                cForm("phone"),
+                                "Phone number of Client",
+                                "text",
+                                Map("placeholder"->"Phone number", "required" -> "required"),
+                                ""
+                            )
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                @f_text(
+                                    cForm("source"),
+                                    "Source of Client",
+                                    "text",
+                                    Map("placeholder"->"Source of Client"),
+                                    ""
+                                )
+                            </div>
+
+                            <div class="col-md-6">
+                                @f_text(
+                                    cForm("pid"),
+                                    "Pid(s) of Properties(if any)",
+                                    "text",
+                                    Map("placeholder"->"Pid(s) of Properties"),
+                                    ""
+                                )
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                @f_text(
+                                    cForm("maxBudget"),
+                                    "Client's Maximum Budget",
+                                    "text",
+                                    Map("placeholder"->"Must be number e.g 300,000", "onkeyup" -> "this.value = numFormat(this.value)"),
+                                    ""
+                                )
+                            </div>
+                        </div>
+
+                        @*
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div style="position: relative">
+                                @f_text(
+                                    cForm("inspectionDate"),
+                                    "Client's Date of Inspection",
+                                    "text",
+                                    Map("placeholder"->"Willing date to Inspect", "id" -> "datetimepicker"),
+                                    ""
+                                )
+                                </div>
+                            </div>
+                        </div>
+                        *@
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@styles = {
+    <link rel="stylesheet" href="@StaticAssets.getUrl("datetimepicker/css/bootstrap-datetimepicker.min.css")" />
+}
+
+@scripts = {
+    <script type="text/javascript" src="@StaticAssets.getUrl("js/moment.min.js")"></script>
+    <script type="text/javascript" src="@StaticAssets.getUrl("datetimepicker/js/bootstrap-datetimepicker.min.js")"></script>
+
+    <script type="text/javascript">
+            $(function() {
+                $('#datetimepicker').datetimepicker({
+                    minDate: moment(),
+                    format: "DD-MM-YYYY"
+                });
+                //$('.datetimepicker').val("");
+            });
+    </script>
+}

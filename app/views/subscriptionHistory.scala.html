@@ -1,0 +1,268 @@
+@import java.util
+@import java.text.SimpleDateFormat
+@import pojos.TellerPaymentDetail
+@(modelMap :util.Map[String, Object])
+@subscriptionList = @{modelMap.get("subscriptionList").asInstanceOf[List[models.Subscription]]}
+@agent = @{modelMap.get("agent").asInstanceOf[Agent]}
+@total = @{modelMap.get("total").asInstanceOf[Long]}
+@today = @{new Date()}
+@simpleDateFormat = @{new SimpleDateFormat("yyyy MMM dd")}
+
+@layout("Subscriptions History", styles = styles, scripts = scripts) {
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            @agent.name Subscription's History Table  (Total: @total)
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="row text-small">
+                        <div class="col-sm-4">
+                        </div>
+                        <div class="col-sm-4">
+                        </div>
+                    </div>
+                </div>
+                <table class="table table-striped text-small">
+                    <thead>
+                        <tr>
+                            <th>Plan</th>
+                            <th>Status</th>
+                            <th>Subscription Date</th>
+                            <th>Activation Date</th>
+                            <th>Expiry Date</th>
+                            <th>Is Expired</th>
+                            <th>Payment Type</th>
+                            <th>Duration</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    @for(subscription <- subscriptionList){
+
+                        <tr>
+                            <td>
+                                @subscription.name
+                            </td>
+
+                            <td>
+                                @if(subscription.isActive == null || subscription.isActive == false){
+                                    In Active
+                                }else{
+                                    Active
+                                }
+                            </td>
+
+                            <td>
+                                @subscription.created
+                            </td>
+
+                            <td>
+                                    @if(subscription.activationDate != null){
+                                        @subscription.activationDate
+                                    }else{
+                                        N/A
+                                    }
+
+                            </td>
+
+                            <td>
+                                @if(subscription.expiryDate != null){
+                                    @subscription.expiryDate
+                                }else{
+                                    N/A
+                                }
+                            </td>
+
+                            <td>
+
+                                @if(subscription.expiryDate != null){
+                                    @if(today.after(subscription.expiryDate)){
+                                        YES
+                                    }else{
+                                        NO
+                                    }
+                                }else {
+                                    N/A
+                                }
+
+                            </td>
+
+                            <td>
+                                @subscription.paymentType.toString
+                            </td>
+
+                            <td>
+                                @if(subscription.duration != null){
+                                    @subscription.duration Days
+                                }else {
+                                    N/A
+                                }
+
+                            </td>
+
+                            <td>
+
+                                @if(subscription.paymentType != null){
+
+                                    <p>
+                                        <a class="btn btn-info btn-xs" data-toggle="modal" data-target="#viewProductInfo@subscription.id">
+                                            Product Info</a>
+                                    </p>
+
+                                    <p>
+                                        <a class="btn btn-warning btn-xs" data-toggle="modal" data-target="#viewPaymentInfo@subscription.id">
+                                            Payment Info</a>
+                                    </p>
+
+                                    <p>
+                                        <a href="@routes.AdminSubscriptionController.subscriptionTopUps(subscription.id)" class="btn btn-primary btn-xs" data-toggle="modal">
+                                            View TopUps</a>
+                                    </p>
+
+                                    <div class="modal inmodal" id="viewProductInfo@subscription.id" tabindex="-1" role="dialog" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content animated bounceInRight">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal"><span
+                                                    aria-hidden="true">&times;</span><span
+                                                    class="sr-only">Close</span></button>
+                                                    <i class="fa fa-user modal-icon"></i>
+                                                    <h4 class="modal-title">Product Info</h4>
+                                                </div>
+
+                                                <div class="modal-body">
+
+                                                    <div class="table-responsive">
+                                                        <table class="table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Product Type</th>
+                                                                    <th>Number Of Unit(s)</th>
+                                                                    <th>Available Unit(s)</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            @if(subscription != null){
+                                                                @for(product <- subscription.products){
+                                                                    <tr>
+                                                                        <td>@product.productType.name</td>
+                                                                        <td>@product.maximum</td>
+                                                                        <td>@product.getRemainder</td>
+                                                                    </tr>
+                                                                }
+                                                            }
+
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+
+                                                </div>
+
+                                                <div class="modal-footer">
+                                                    <input type="hidden" name="agent_id" id="agent">
+                                                    <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal inmodal" id="viewPaymentInfo@subscription.id" tabindex="-1" role="dialog" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content animated bounceInRight">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal"><span
+                                                    aria-hidden="true">&times;</span><span
+                                                    class="sr-only">Close</span></button>
+                                                    <i class="fa fa-user modal-icon"></i>
+                                                    <h4 class="modal-title">Payment Info</h4>
+                                                </div>
+
+                                                <div class="modal-body">
+                                                    <ul class="list-group">
+                                                        <li class="list-group-item">
+                                                            Payment Type:
+                                                            @subscription.paymentType
+                                                        </li>
+
+                                                        @if(subscription.paymentDetail.isInstanceOf[TellerPaymentDetail]){
+                                                            <li class="list-group-item">
+                                                                Teller Number:
+                                                                @{
+                                                                    (subscription.paymentDetail.asInstanceOf[TellerPaymentDetail]).getTellerNumber
+                                                                }
+
+                                                            </li>
+                                                        }
+
+                                                        @if(subscription.paymentDetail.isInstanceOf[TellerPaymentDetail]){
+                                                            <li class="list-group-item">
+                                                                Amount Paid: &#x20A6;
+                                                                @{
+                                                                    (subscription.paymentDetail.asInstanceOf[TellerPaymentDetail]).amountPaid
+                                                                }
+                                                            </li>
+                                                        }
+
+                                                        @if(subscription.paymentDetail.isInstanceOf[TellerPaymentDetail]){
+                                                            <li class="list-group-item">
+                                                                Payment Date:
+                                                                    @simpleDateFormat.format((subscription.paymentDetail.asInstanceOf[TellerPaymentDetail]).paymentDate.getTime).toString
+                                                            </li>
+                                                        }
+
+                                                    </ul>
+
+                                                </div>
+
+                                                <div class="modal-footer">
+                                                    <input type="hidden" name="agent_id" id="agent">
+                                                    <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </td>
+
+
+                        </tr>
+
+
+                    }
+
+                    </tbody>
+                </table>
+                <div class="panel-footer">
+                    <div class="row">
+                        <div class="col-sm-4 hidden-xs">
+
+                        </div>
+                        <div class="col-sm-3 text-center">
+                        </div>
+                        <div class="col-sm-5 text-right">
+                        @inc.pager(total)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@styles = {
+}
+
+@scripts = {
+
+    <script>
+
+
+
+    </script>
+}
+

@@ -1,0 +1,129 @@
+@(map: Map[String, Object])
+
+@import play.mvc.Http;
+
+@request = @{Http.Context.current().request()}
+@path = @{Http.Context.current().request().path()}
+
+@inspections = @{map.get("inspections").asInstanceOf[java.util.List[AgentInspection]]}
+@total = @{map.get("total").asInstanceOf[Long]}
+
+@profile.layout("Scheduled Inspections", styles = styles, scripts = scripts) {
+    <div class="alert alert-info">
+        <span class="">My Scheduled Inspections (@total total)</span>
+    </div>
+    @if(flash.containsKey("message")) {
+        <div class="alert alert-warning">@flash.get("message")</div>
+    }
+    <div class="panel">
+        <div class="panel panel-heading">
+            <div class="row">
+                <form action="@path" class="form-inline col-md-12 text-right">
+                    <div class="form-group">
+                        <input type="text" name="daterange" value="" class="form-control" placeholder="Filter by inspection date" readonly/>
+                    </div>
+                    <button type="submit" class="btn btn-default">Search</button>
+                </form>
+            </div>
+        </div>
+        <div class="panel-body">
+            <table class="table table-striped" id="table-resp">
+                <thead>
+                    <tr>
+                        <th>Client Details</th>
+                        <th>From</th>
+                        <th>Date of Inspection</th>
+                        <th>Date created</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for(inspection <- inspections) {
+                    <tr>
+                        <td>
+                            <span class="label label-info">@inspection.info().name</span><br/>
+                            <span class="label label-success">@inspection.info().phone</span>
+                            <span class="label label-warning">@inspection.info().email</span>
+                        </td>
+                        <td>
+                            <span class="label label-success">@{inspection.info().`type`}</span>
+                        </td>
+                        <td>
+                            <span class="label label-success">Date of inspection: @{inspection.dateOfInspection.format("HH:mm:ss dd MMM, yyyy")}</span>
+
+                            @if(inspection.info().inspectionDate != null) {
+                                <br/>
+                                <span class="label label-info">Client Willing date of inspection: @{inspection.info().inspectionDate.format("dd MMM, yyyy")}</span>
+                            }
+                        </td>
+                        <td>
+                            @inspection.created.format("dd-MM-yyyy")
+                        </td>
+                        <td>
+
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <footer class="panel-footer">
+            <div class="row">
+                <div class="col-sm-4 hidden-xs">
+                </div>
+                <div class="col-sm-3 text-center">
+                        <!--<small class="text-muted inline m-t-small m-b-small">showing 20-30 of 50 items</small>-->
+                </div>
+                <div class="col-sm-5 text-right text-center-sm">
+                @inc.pager(total)
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <div class="modal fade" id="replies-modal">
+
+    </div>
+}
+
+@styles = {
+    <link rel="stylesheet" href="@StaticAssets.getUrl("daterange/daterangepicker.css")" />
+}
+
+@scripts = {
+    <script src="@StaticAssets.getUrl("daterange/moment.min.js")"></script>
+    <script src="@StaticAssets.getUrl("daterange/daterangepicker.js")"></script>
+
+    <script type="text/javascript">
+            $(document).ready(function() {
+                $(".send-reply").click(function() {
+                    var form = $(this).closest("form");
+                    //var obj = form.serializeArray().reduce(function(obj, v) { obj[v.name] = v.value; return obj; }, { });
+                    $('#ajaxWait').show();
+                    jQuery.ajax({
+                        type: "POST",
+                        url : form.attr("action"),
+                        data : form.serialize(),
+                        success : function(data) {
+                            if (data == "success") {
+                                $("#info-box").html("You have successfully sent a response to the agent");
+                                $("#ajaxWait").hide();
+                                $('#info-modal').modal('show');
+                            }
+                            window.location.reload();
+                        }
+                    });
+                    return false;
+                });
+
+                $('input[name="daterange"]').daterangepicker({
+                    autoApply: true,
+                    locale: {
+                        format: 'DD-MM-YYYY'
+                    }
+                });
+                $('input[name="daterange"]').val("");
+            });
+    </script>
+}
+

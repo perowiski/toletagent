@@ -1,0 +1,170 @@
+@import models_enums.AgentProduct
+@import models_enums.ProductType
+@(title: String = "", styles: Html = Html(""), scripts: Html = Html(""))(content: Html)
+
+@main_layout(title, styles, scripts) {
+    <nav class="navbar-default navbar-static-side" role="navigation">
+        <div class="sidebar-collapse">
+            <ul class="nav metismenu" id="side-menu">
+                <li class="nav-header">
+                    <div class="dropdown profile-element">
+                        <span>
+                            <img alt="image" class="img-responsive" src="@StaticAssets.getUrl("image/logo.png")"/>
+                        </span>
+                        <a data-toggle="dropdown" class="dropdown-toggle" href="@routes.AgentDashboardController.index()">
+                            <span class="clear">
+                                <span class="block m-t-xs"> <strong class="font-bold">
+                                @if(Auth.isAgent) {
+                                    @Auth.getAgent().name
+                                } else {
+                                    ToLet.com.ng
+                                }
+                                </strong></span>
+                            </span>
+                        </a>
+                    </div>
+                </li>
+                <li>
+                    <a href="@routes.AgentDashboardController.index()">
+                        <i class="fa fa-dashboard"></i>
+                        <span class="nav-label"> Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@routes.AgentSubscriptionController.index()">
+                        <i class="fa fa-list"></i>
+                        <span class="nav-label">Subscription</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@routes.AgentDashboardController.listings("rent")">
+                        <i class="fa fa-list"></i>
+                        <span class="nav-label"> For rent</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@routes.AgentDashboardController.listings("sale")">
+                        <i class="fa fa-list"></i>
+                        <span class="nav-label"> For sale</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@routes.AgentDashboardController.listings("shortlet")">
+                        <i class="fa fa-users"></i>
+                        <span class="nav-label"> Shortlet</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="@routes.AgentDashboardController.agentLeads()">
+                        <i class="fa fa-database"></i>
+                        <span class="nav-label"> Unique Leads</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@routes.AgentDashboardController.propertyLeads()">
+                        <i class="fa fa-database"></i>
+                        <span class="nav-label"> ToLet Leads</span>
+                    </a>
+                </li>
+                @if(Auth.getAgent.currentSubscription != null) {
+                    @if(Auth.getAgent.currentSubscription.agentProducts().contains(ProductType.CLIENT_DETAIL)) {
+                        <li>
+                            <a href="@routes.AgentClientsController.index()">
+                                <i class="fa fa-database"></i>
+                                <span class="nav-label"> Other Clients</span>
+                            </a>
+                        </li>
+                    }
+                }
+                @if(Auth.getAgent.currentSubscription != null) {
+                    @if(Auth.getAgent.currentSubscription.agentProducts().contains(ProductType.SCHEDULE_INSPECTION_REMINDER)) {
+                        <li>
+                            <a href="@routes.AgentInspectionsController.index()">
+                                <i class="fa fa-clock-o"></i>
+                                <span class="nav-label"> My Inspections </span>
+                            </a>
+                        </li>
+                    }
+                }
+                @if(Auth.getAgent.products.contains(AgentProduct.BP)) {
+                    <li>
+                        <a href="@routes.AgentConnectsController.sent()">
+                            <i class="fa fa-send"></i>
+                            <span class="nav-label"> My Adverts</span>
+                        </a>
+                    </li>
+                }
+                @if(Auth.getAgent.products.contains(AgentProduct.BCR)) {
+                    <li>
+                        <a href="@routes.AgentConnectsController.received()">
+                            <i class="fa fa-inbox"></i>
+                            <span class="nav-label">
+                                My Messages
+                                <span class="label label-danger">@AgentConnectsController.notSeen()</span>
+                            </span>
+                        </a>
+                    </li>
+                }
+                <li>
+                    <a href="@routes.AgentDashboardController.updateView()">
+                        <i class="fa fa-list"></i>
+                        <span class="nav-label">Update Profile </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@routes.ServiceController.service()">
+                        <i class="fa fa-list"></i>
+                        <span class="nav-label">Manage Services </span>
+                    </a>
+                </li>
+            </ul>
+
+        </div>
+    </nav>
+    <div id="page-wrapper" class="gray-bg dashbard-1">
+        <div class="row border-bottom">
+            <nav class="navbar navbar-static-top" role="navigation" style="margin-bottom: 0">
+                <div class="navbar-header">
+                    <a class="navbar-minimalize minimalize-styl-2 btn btn-primary " href="#"><i class="fa fa-bars"></i> </a>
+                </div>
+                <ul class="nav navbar-top-links navbar-right">
+                    <li>
+                        <a href="@routes.AgentDashboardController.listingPost()">
+                            <i class="fa fa-edit"></i> Post property
+                        </a>
+                    </li>
+                    <li>
+                        <a href="@routes.AuthController.logout()">
+                            <i class="fa fa-sign-out"></i> Log out
+                        </a>
+                    </li>
+                </ul>
+
+            </nav>
+        </div>
+        <div class="row  border-bottom white-bg dashboard-header">
+            <div class="col-lg-10">
+                <h2>@title</h2>
+                <ol class="breadcrumb">
+                    <li>
+                        <a href="@routes.IndexController.index()">Home</a>
+                    </li>
+                </ol>
+            </div>
+            <div class="col-lg-2">
+
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="wrapper wrapper-content">
+                    <div class="row">
+                    @content
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+}

@@ -1,0 +1,232 @@
+@(rForm: Form[AgentBrief], brief: AgentBrief)
+
+@import scala.collection.immutable.Map
+@import fields._
+@import models_enums.PropertyMode
+
+
+@url = @{ if(brief.id != null) routes.AgentBriefsController.update(brief.id)
+else routes.AgentBriefsController.send() }
+
+@profile.layout("Send brief to other agents", scripts=scripts, styles=styles) {
+    <div class="panel panel-default" id="panel-section">
+        <div class="panel-heading">
+            Send your brief to other agents
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-12" id="sendbriefcontainer">
+                    <form action="@url" method="POST" id="req-form" class="col-md-offset-1 col-md-10">
+                        @if(rForm.hasErrors) {
+                            <div class="alert alert-danger">
+                                Please fill all required fields as indicated below
+                            </div>
+                        }
+
+                        <fieldset>
+                            <div class="row">
+                                <label class="control-label col-md-3">Choose a category for brief</label>
+                                <div class="col-md-9">
+                                    @f_radiobuttons(
+                                        rForm("mode"),
+                                        rForm,
+                                        PropertyMode.select()
+                                    )
+                                </div>
+                            </div>
+                            <br/>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    @f_select_num(
+                                        rForm("beds"),
+                                        "No of beds (if applicable)",
+                                        (1 to 10),
+                                        ""
+                                    )
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group @if(rForm("type").hasErrors) {has-error}">
+                                        <label class="control-label">Type of property brief</label>
+                                        <select name="type" class="form-control" required="required">
+                                            <option value="">--select--</option>
+                                            @for((id, name) <- Selectors.selectTypes()) {
+                                                <option value="@id" @if(rForm("type").value == id) {selected = "selected"}>@name</option>
+                                            }
+                                        </select>
+                                        <span class="help-block">@{rForm("type").error.map { error => error.message }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    @f_text(
+                                        rForm("price"),
+                                        "Price",
+                                        "text",
+                                        Map("placeholder"->"e.g 300000 (comma is added for you)", "onkeyup" -> "this.value = numFormat(this.value)"),
+                                        ""
+                                    )
+                                </div>
+                            </div>
+                            <br/>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group @if(rForm("state").hasErrors) {has-error}">
+                                        <label class="control-label">State of property brief</label>
+                                        <select name="state" id="state_select" class="form-control" required="required">
+                                            <option value="">Choose State</option>
+                                            @for((id, name) <- Selectors.selectStates()) {
+                                                <option value="@id" @if(rForm("state").value == id) {selected = "selected"}>@name</option>
+                                            }
+                                        </select>
+                                        <span class="help-block">@{rForm("state").error.map { error => error.message }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group @if(rForm("axis").hasErrors) {has-error}">
+                                        <label class="control-label">Locality of property brief</label>
+                                        <select name="axis" id="axis_select" class="form-control" required="required">
+                                            <option value="">Choose Locality</option>
+                                        </select>
+
+                                        <select id="axis_options" class="hidden hide">
+                                        @for((parent, options) <- Selectors.selectStateAxises()) {
+                                            @for((value, name) <- options) {
+                                                <option class="option_@parent select_option" value="@value" @if(rForm("axis").value == value) {selected = "selected"}>@name</option>
+                                            }
+                                        }
+                                        </select>
+                                        <span class="help-block">@{rForm("axis").error.map { error => error.message }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <br/>
+
+                            <div class="row">
+                                <div class="form-group col-md-12 @if(rForm("comment").hasErrors) {has-error}">
+                                    <label class="control-label">Additional Details</label>
+                                    <textarea name="comment" rows="3" class="form-control">@rForm("comment").value</textarea>
+                                    <span class="help-block">@{rForm("comment").error.map { error => error.message }}</span>
+                                </div>
+                            </div>
+
+                        </fieldset>
+
+                        @if(brief.id != null) {
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button class="btn btn-tolet pull-right" type="submit">Submit</button>
+                                </div>
+                            </div>
+                        } else  {
+                            <br/>
+                            <hr/>
+                            <br/>
+                            <fieldset>
+                                <legend>Select agents within the following locations to send brief to</legend>
+                                <div class="row">
+
+                                    @{rForm("agentAxises[]").error.map { error =>
+                                        Html("""<div class="alert alert-danger col-md-12">
+                                            |'State' and 'Localities' of agents are compulsory.<br/>
+                                            |Please choose one or more localities of agents you want to send briefs to.
+                                            |</div>""".stripMargin) }
+                                    }
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="control-label">State</label>
+                                            <select name="agentState" id="state2_select" class="form-control" required="required">
+                                                <option value="">Select State</option>
+                                                @for((id, name) <- Selectors.selectStates()) {
+                                                    <option value="@id">@name</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div class="form-group" style="position: relative">
+                                            <label class="control-label">Localities</label>
+                                            <select name="agentAxises[]" id="axis2_select" multiple="multiple">
+                                            </select>
+
+                                            <select id="axis2_options" class="hidden hide">
+                                            @for((parent, options) <- Selectors.selectStateAxises()) {
+                                                @for((value, name) <- options) {
+                                                    <option class="option_@parent select_option" value="@value">@name</option>
+                                                }
+                                            }
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-danger errordisplay"></div>
+
+                                <br/>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <button id="sendBtn" name="submit" value="send" class="btn btn-tolet pull-right" type="submit">Send Brief to Agents</button>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        }
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@styles = {
+    <link href="@StaticAssets.getUrl("multiselect/jquery.multiselect.css")" rel="stylesheet">
+    <style type="text/css">
+    label input[type=checkbox] {
+        display: inline-block !important;
+    }
+    #panel-section { min-height: 1100px; }
+    </style>
+}
+
+@scripts = {
+    <script src="@StaticAssets.getUrl("multiselect/jquery.multiselect.js")"></script>
+    <script type="text/javascript">
+            $(document).ready(function() {
+                insertAxises();
+
+                $('select[multiple]').multiselect({
+                    columns: 4,
+                    texts: {
+                        placeholder: 'Select agent localities'
+                    },
+                    selectAll: true,
+                    search: true,
+                    minHeight: 300
+                });
+
+
+                function insertAxises2() {
+                    $("#state2_select").change(function(){
+                        var index = $(this).val();
+                        insertOptionsBase("", index, "axis2");
+                        $('select[multiple]').multiselect('reload');
+                    });
+                }
+                insertAxises2();
+
+                $("#sendBtn").click(function (e) {
+                    $(".errordisplay").hide();
+
+                    var values = $("#axis2_select").val();
+                    if(values == null) {
+                        $(".errordisplay").html("Please choose one or more localities of agents you want to send briefs to").show()
+                        e.preventDefault();
+                        return false;
+                    }
+                    return true;
+                })
+            });
+    </script>
+}

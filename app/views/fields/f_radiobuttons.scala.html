@@ -1,0 +1,17 @@
+@(field: Field, 
+	form: play.data.Form[_ <: Any], 
+	options: Map[String, String]
+)
+
+<div class="form-group @if(field.hasErrors) {error}">
+    @for(((value, name), index) <- options.zipWithIndex) {
+      <label>
+      <input type="radio"
+        name="@field.name"
+        value="@value"
+        @if(form(field.name).value == value)  {checked}>
+          <small class="rad">@name</small>
+      </label>
+    }
+    <span class="help-block">@{field.error.map { error => error.message }}</span>
+</div>

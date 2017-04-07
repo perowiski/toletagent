@@ -1,0 +1,90 @@
+@(leads: List[PropertyLead], total: Long)
+@import play.mvc.Http;
+@request = @{Http.Context.current().request()}
+@path = @{Http.Context.current().request().path()}
+
+@layout("Property Leads") {
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Property Leads' Table  (Total: @total)
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="row text-small">
+                        <div class="col-sm-4">
+                        </div>
+                        <div class="col-sm-4">
+                        </div>
+                        <form action="@routes.AdminDashboardController.propertyLeadList()" class="col-sm-4 form-inline">
+                            <div class="input-group">
+                                <input type="text" name="search" value="@Utility.getQuery("search2")" class="form-control" placeholder="Search">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-sm" type="submit">Go!</button>
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <table class="table table-striped text-small">
+                    <thead>
+                        <tr>
+                            <th width="20"><input type="checkbox"></th>
+                            <th>Lead Detail</th>
+                            <th>Request Details</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @for(lead <- leads) {
+                        <tr>
+                            <td><input type="checkbox" name="lead[]" value="@lead.id"></td>
+                            <td>
+                                @lead.userName<br/>
+                                @lead.userEmail<br/>
+                                @lead.userPhone<br/>
+
+                            </td>
+                            <td>
+                                <span class="label label-default">Who: @lead.userType</span><br/>
+                                @if(lead.maxBudget != null) {
+                                    <span class="label label-info">Maximum Budget: @formatters.AmtFormatter.format(lead.maxBudget)</span><br/>
+                                }
+                                @if(lead.willingDate != null) {
+                                    <span class="label label-success">InspectionDate: @{new Date(lead.willingDate).format("dd MMM, yyyy")}</span><br/>
+                                }
+                                @if(lead.maxBudget != null) {
+                                    <span class="label label-info">Maximum Budget: @formatters.AmtFormatter.format(lead.maxBudget)</span><br/>
+                                }
+                                @if(lead.getProperty != null) {
+                                    @if(lead.getProperty.beds != null) {
+                                        Beds: @lead.getProperty.beds <br/>
+                                    }
+                                    Type of property: @{lead.getProperty.`type`} <br/>
+                                    Location of property: @{lead.getProperty.address()} <br/>
+                                    <a href="@lead.getProperty.link" class="label label-info" target="_blank">@{lead.getProperty.pid}</a>
+                                }
+                            </td>
+                            <td>
+                                @lead.created().format("dd MMM, yyyy:HH:mm")
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="panel-footer">
+            <div class="row">
+                <div class="col-sm-4 hidden-xs">
+
+                </div>
+                <div class="col-sm-3 text-center">
+                </div>
+                <div class="col-sm-5 text-right">
+                @inc.pager(total)
+                </div>
+            </div>
+        </div>
+    </div>
+}

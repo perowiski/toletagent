@@ -1,0 +1,72 @@
+@(leads: List[AgentLead], total: Long)
+@import play.mvc.Http;
+@request = @{Http.Context.current().request()}
+@path = @{Http.Context.current().request().path()}
+
+@layout("Agent Leads") {
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Agent Leads' Table  (Total: @total)
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="row text-small">
+                        <div class="col-sm-4">
+                        </div>
+                        <div class="col-sm-4">
+                        </div>
+                        <form action="@routes.AdminDashboardController.agentLeadList()" class="col-sm-4 form-inline">
+                            <div class="input-group">
+                                <input type="text" name="search" value="@Utility.getQuery("search2")" class="form-control" placeholder="Search">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-sm" type="submit">Go!</button>
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <table class="table table-striped text-small">
+                    <thead>
+                        <tr>
+                            <th width="20"><input type="checkbox"></th>
+                            <th>Lead Detail</th>
+                            <th>Request Link</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @for(lead <- leads) {
+                        <tr>
+                            <td><input type="checkbox" name="lead[]" value="@lead.id"></td>
+                            <td>
+                                @lead.name<br/>
+                                @lead.email<br/>
+                                @lead.phone
+                            </td>
+                            <td>
+                                <a class="btn btn-info btn-xs" target="_blank" href="@routes.AdminDashboardController.propertyLeadList()?id=@lead.propertyLead">Request</a>
+                            </td>
+                            <td>
+                                @lead.created().format("dd MMM, yyyy:HH:mm")
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="panel-footer">
+            <div class="row">
+                <div class="col-sm-4 hidden-xs">
+
+                </div>
+                <div class="col-sm-3 text-center">
+                </div>
+                <div class="col-sm-5 text-right">
+                @inc.pager(total)
+                </div>
+            </div>
+        </div>
+    </div>
+}

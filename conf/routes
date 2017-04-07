@@ -1,0 +1,125 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+GET         /                              controllers.IndexController.index
+
+GET         /login                         controllers.AuthController.index
+POST        /login                         controllers.AuthController.login
+GET         /logout                        controllers.AuthController.logout
+
+GET         /firstAccount                  controllers.AuthController.firstAccount
+
+GET         /profile                                controllers.AgentDashboardController.index
+GET         /profile/post-property                         controllers.AgentDashboardController.listingPost()
+GET         /profile/properties-:mode                      controllers.AgentDashboardController.listings(mode: String)
+GET         /agent_edit                    controllers.AgentDashboardController.updateView()
+POST        /agent_edit                    controllers.AgentDashboardController.update()
+POST        /logo                          controllers.AgentDashboardController.addLogo()
+
+GET         /profile/agentLeads                            controllers.AgentDashboardController.agentLeads()
+GET         /profile/propertyLeads                         controllers.AgentDashboardController.propertyLeads()
+
+
+GET         /profile/subscription                           controllers.AgentSubscriptionController.index()
+GET         /profile/topUp                                  controllers.AgentSubscriptionController.topUpProduct()
+GET         /profile/change-plan                            controllers.AgentSubscriptionController.changePlan()
+GET         /profile/renew-plan                             controllers.AgentSubscriptionController.renewPlan()
+GET         /subscription/plan/:id                          controllers.AgentSubscriptionController.planInfo(id:Long)
+GET         /subscription/paymentTypes                      controllers.AgentSubscriptionController.paymentTypes
+POST        /profile/subscribe                              controllers.AgentSubscriptionController.subscribe()
+POST        /profile/topUp                                  controllers.AgentSubscriptionController.topUp()
+
+POST        /subscription/activatePendingSubscription       controllers.AdminSubscriptionController.activatePendingSubscription()
+POST        /subscription/activatePendingTopUp              controllers.AdminSubscriptionController.activatePendingTopUp()
+GET         /subscriptions                                  controllers.AdminSubscriptionController.subscriptions()
+GET         /subscription-history/agent/:id                 controllers.AdminSubscriptionController.subscriptionHistory(id :Long)
+GET         /subscription-topups/:id                        controllers.AdminSubscriptionController.subscriptionTopUps(id :Long)
+GET         /pending-subscription                           controllers.AdminSubscriptionController.pendingSubscriptions()
+GET         /pending-topups                                 controllers.AdminSubscriptionController.pendingTopUps()
+
+
+GET         /profile/clients                               controllers.AgentClientsController.index()
+GET         /profile/addClient                             controllers.AgentClientsController.add()
+POST        /profile/addClient                             controllers.AgentClientsController.create()
+GET         /profile/editClient/:id                        controllers.AgentClientsController.edit(id: Long)
+POST        /profile/editClient/:id                        controllers.AgentClientsController.update(id: Long)
+
+POST        /profile/scheduleInspection                    controllers.AgentInspectionsController.schedule()
+
+GET         /profile/inspections                           controllers.AgentInspectionsController.index()
+GET         /profile/addInspection                         controllers.AgentInspectionsController.add()
+POST        /profile/addInspection                         controllers.AgentInspectionsController.create()
+GET         /profile/editInspection/:id                    controllers.AgentInspectionsController.edit(id: Long)
+POST        /profile/editInspection/:id                    controllers.AgentInspectionsController.update(id: Long)
+
+GET         /profile/connects/sent                         controllers.AgentConnectsController.sent()
+GET         /profile/connects/received                     controllers.AgentConnectsController.received()
+POST        /profile/connects/reply/:id                    controllers.AgentConnectsController.reply(id: Long)
+GET         /profile/connects/replies/:id                  controllers.AgentConnectsController.replies(id: Long)
+
+GET         /profile/connects/replierModal/:id             controllers.AgentConnectsController.replier(id: Long)
+
+#GET         /profile/viewRequests                         controllers.AgentRequestsController.index()
+GET         /profile/sendRequest                           controllers.AgentRequestsController.create()
+POST        /profile/sendRequest                           controllers.AgentRequestsController.send()
+GET         /profile/editRequest/:id                       controllers.AgentRequestsController.edit(id: Long)
+POST        /profile/updateRequest/:id                     controllers.AgentRequestsController.update(id: Long)
+
+GET         /profile/sendProperty/:pid                     controllers.AgentBriefsController.sendProperty(pid: String)
+POST        /profile/sendProperty/:pid                     controllers.AgentBriefsController.postProperty(pid: String)
+GET         /profile/sendBrief                             controllers.AgentBriefsController.create()
+POST        /profile/sendBrief                             controllers.AgentBriefsController.send()
+GET         /profile/editBrief/:id                         controllers.AgentBriefsController.edit(id: Long)
+POST        /profile/updateBrief/:id                       controllers.AgentBriefsController.update(id: Long)
+
+
+POST         /api/postAgent                      controllers.ApiController.postAgent
+POST         /api/postAgentLead                  controllers.ApiController.postAgentLead
+POST         /api/postUserRequest                controllers.ApiController.postPropertyLead
+
+GET     /pull-api                          controllers.AdminDashboardController.runApiPull
+GET     /pull-all-api                      controllers.AdminDashboardController.runApiPullAll
+
+GET     /admin-dashboard               controllers.AdminDashboardController.index
+GET     /single-agent/:id              controllers.AdminDashboardController.agent(id: Long)
+GET     /list-agent                    controllers.AdminDashboardController.agentList
+GET     /list-property-leads           controllers.AdminDashboardController.propertyLeadList
+GET     /list-agent-leads              controllers.AdminDashboardController.agentLeadList
+GET     /agents                        controllers.AdminCrudController.agents(search: String)
+
+GET     /admins/:id                    controllers.AdminCrudController.single(id: Long)
+GET     /admins                        controllers.AdminCrudController.index()
+
+GET     /createAdmin                   controllers.AdminCrudController.add()
+POST    /createAdmin                   controllers.AdminCrudController.create()
+GET     /editAdmin/:id                 controllers.AdminCrudController.edit(id: Long)
+POST    /editAdmin/:id                 controllers.AdminCrudController.update(id: Long)
+
+POST    /addCredit                 controllers.AdminCrudController.addCredit()
+GET     /viewCredit                 controllers.AdminCrudController.viewCredit()
+GET     /viewCreditHistory                 controllers.AdminCrudController.viewCreditHistory(id: String)
+POST     /setProducts                 controllers.AdminCrudController.setProduct()
+
+GET     /services                      controllers.ServiceController.service()
+GET     /createService                 controllers.ServiceController.add()
+POST     /createService                 controllers.ServiceController.create()
+POST     /updateService                 controllers.ServiceController.update(id: Long)
+GET     /updateService                 controllers.ServiceController.edit(id: Long)
+
+GET     /indexProperties               controllers.SampleController.indexProperties()
+GET     /propertyCount                 controllers.AgentDashboardController.propertyCount()
+GET     /propertyRentedForAgent        controllers.AgentDashboardController.propertyRentedForAgent()
+GET     /propertySoldForAgent        controllers.AgentDashboardController.propertySoldForAgent()
+GET     /propertyPerAreaForAgent        controllers.AgentDashboardController.propertyPerAreaForAgent()
+GET     /mostRequestedAreasForAgent        controllers.AgentDashboardController.mostRequestedAreasForAgent()
+
+
+POST    /activateAdmin/:id             controllers.AdminCrudController.activate(id: Long)
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file                  controllers.Assets.versioned(path="/public", file: Asset)
+
+GET     /public/*file                  controllers.Assets.at(path="/public", file)
+
+GET     /*path/                        controllers.IndexController.untrail(path: String)

@@ -1,0 +1,24 @@
+@(rForm: Form[AgentInspection], inspection: AgentInspection)
+
+
+
+@styles = {
+    <link rel="stylesheet" href="@StaticAssets.getUrl("datetimepicker/css/bootstrap-datetimepicker.min.css")" />
+    <style type="text/css">
+    </style>
+}
+
+@scripts = {
+    <script type="text/javascript" src="@StaticAssets.getUrl("js/moment.min.js")"></script>
+    <script type="text/javascript" src="@StaticAssets.getUrl("datetimepicker/js/bootstrap-datetimepicker.min.js")"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+
+            $('.datetimepicker').datetimepicker({
+                minDate: moment(),
+                format: "DD-MM-YYYY:HH:mm"
+            });
+            $('.datetimepicker').val("");
+        });
+    </script>
+}

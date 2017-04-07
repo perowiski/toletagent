@@ -1,0 +1,200 @@
+@import java.util
+@(modelMap :util.Map[String, Object])
+
+@subscription = @{modelMap.get("subscription").asInstanceOf[Subscription]}
+@products = @{modelMap.get("products").asInstanceOf[java.util.List[Product]]}
+@plans = @{modelMap.get("plans").asInstanceOf[java.util.List[Plan]]}
+
+    @today = @{new Date() }
+    @pendingSubscriptionPaymentTopUp = @{modelMap.get("pendingSubscriptionPaymentTopUp").asInstanceOf[SubscriptionPaymentTopUp]}
+
+@profile.layout("Top-Up Products",scripts = scripts, styles = styles){
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+
+            @if(pendingSubscriptionPaymentTopUp == null){
+                @if(subscription.expiryDate != null){
+                    @if(!today.after(subscription.expiryDate)){
+                        <div class="alert alert-info" role="alert">
+                            You are currently on @subscription.name plan. Your @subscription.duration day(s) subscription runs from @subscription.activationDate to @subscription.expiryDate
+                        </div>
+                        <form action="@routes.AgentSubscriptionController.topUp()" method="POST">
+
+                            <div class="form-group table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Product Type</th>
+                                            <th>1 Unit Price</th>
+                                            <th>Units</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    @for(product <- products){
+                                        <tr>
+                                            <td>@product.productType.name</td>
+                                            <td>&#x20A6;@product.unitPrice</td>
+                                            <td><input type="number" class="form-control" required value="0" name="@product.productType.name" id="@product.productType" placeholder="Unit" min="0"></td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                                <button type="button" class="btn btn-success pull-right">Calculate</button>
+                            </div>
+
+
+
+                            <div class="form-group">
+                                <select class="form-control" id="paymentType" name="paymentType" onchange="checkPaymentTypes()" required>
+                                    <option value="">Form of Payment</option>
+                                </select>
+                            </div>
+                            <div id = "tellerInfo" class="form-group">
+                                <div class="form-group">
+                                    <input type="text" name="tellerNumber" required="required" class="form-control" placeholder="Teller Number">
+                                </div>
+
+                                <div class="form-group">
+                                    <input type="number" name = "amountPaid" required="required" class="form-control" placeholder="Amount Paid">
+                                </div>
+
+                                <div class="form-group">
+                                    <input class="form-control" id="paymentDate" name="paymentDate" placeholder="Payment Date" type="text" required/>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </form>
+                    }else{
+                        <div class="alert alert-info" role="alert">
+                            Your @subscription.duration day(s) @subscription.name subscription that runs from @subscription.activationDate to @subscription.expiryDate has expired. Renew or Upgrade plan now.
+                        </div>
+                        <a href="@routes.AgentSubscriptionController.changePlan()" class="btn btn-warning btn-sm pull-right">Change/Upgrade Plan</a>
+                    }
+                }else{
+                    <div class="alert alert-info" role="alert">
+                        You are currently on @subscription.name plan.
+                    </div>
+                    <form action="@routes.AgentSubscriptionController.topUp()" method="POST">
+
+                        <div class="form-group table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Product Type</th>
+                                        <th>Units</th>
+                                        <th>1 Unit Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @for(product <- products){
+                                    <tr>
+                                        <td>@product.productType.name</td>
+                                        <td><input type="text" name="@product.productType.name" id="@product.productType" placeholder="Unit" min="1" onkeydown="listenToTextChange(this)"></td>
+                                        <td>&#x20A6;@product.unitPrice</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+
+                        </div>
+
+                        <div class="form-group">
+                            <select class="form-control" id="paymentType" name="paymentType" onchange="checkPaymentTypes()" required>
+                                <option value="">Form of Payment</option>
+                            </select>
+                        </div>
+                        <div id = "tellerInfo" class="form-group">
+                            <div class="form-group">
+                                <input type="text" name="tellerNumber" required="required" class="form-control" placeholder="Teller Number">
+                            </div>
+
+                            <div class="form-group">
+                                <input type="number" name = "amountPaid" required="required" class="form-control" placeholder="Amount Paid">
+                            </div>
+
+                            <div class="form-group">
+                                <input class="form-control" id="paymentDate" name="paymentDate" placeholder="Payment Date" type="text" required/>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                }
+            }else{
+                <div class="alert alert-info" role="alert">
+                    You are currently on @subscription.name plan.
+                </div>
+                <div class="alert alert-danger" role="alert">The system has detected that you have a pending top-up that is subjected to the administrator approval. Try again later.</div>
+            }
+
+
+        </div>
+    </div>
+
+
+}
+
+@scripts = {
+
+    <script src="@StaticAssets.getUrl("js/jquery-2.1.1.js")"></script>
+    <script src="@StaticAssets.getUrl("js/plugins/datapicker/bootstrap-datepicker.js")"></script>
+
+    <script>
+
+        var productTypes = [];
+
+        function loadPlanInformation(){
+             var planId =  24;
+             $.getJSON("/subscription/plan/"+planId, function(result,status,xhr){
+                if(status == "success"){
+                    for(var i = 0; i < result.products.length; ++i){
+                        var product = result.products[i];
+                        productTypes[i] = product;
+                    }
+                }
+            });
+        }
+
+        function loadPaymentTypes(){
+
+             $.getJSON("/subscription/paymentTypes", function(result,status,xhr){
+                if(status == "success"){
+                     $.each( result, function( key, val ) {
+                        $("#paymentType").append("<option value='"+key+"'>" +val+"</option>");
+                      });
+                }
+            });
+        }
+
+        $(document).ready(function(){
+             loadPaymentTypes();
+              $("#tellerInfo").hide();
+              $('#paymentDate').datepicker({
+                    format: "dd/mm/yyyy"
+              });
+        });
+
+        function checkPaymentTypes(){
+          var paymentType = $("#paymentType").val();
+          console.log(paymentType);
+          if(paymentType == "Teller" ){
+             $("#tellerInfo").show();
+          }else{
+            $("#tellerInfo").hide();
+          }
+        }
+
+
+    </script>
+
+
+
+}
+
+@styles = {
+
+
+}
+

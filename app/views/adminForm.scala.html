@@ -1,0 +1,85 @@
+@(aForm: Form[Admin], admin: Admin)
+
+@import fields._
+@import scala.collection.immutable.Map
+
+@url = @{
+    if(admin.id != null) routes.AdminCrudController.update(admin.id)
+    else routes.AdminCrudController.create()
+}
+
+@layout("Admin Form", styles=styles, scripts=scripts) {
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Admin Form
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-8 col-md-offset-2">
+                    <form method="post" action="@url">
+                        <div class="col-md-6">
+                        @f_text(
+                            aForm("name"),
+                            "Name",
+                            "text",
+                            Map("placeholder"->"Name","required" -> "required"),
+                            ""
+                        )
+                        </div>
+                        <div class="col-md-6">
+                        @f_text(
+                            aForm("email"),
+                            "Email",
+                            "email",
+                            Map("placeholder"->"Email", "required" -> "required"),
+                            ""
+                        )
+                        </div>
+                        <hr class="clear"/>
+                        @if(admin.id != null) {
+                            <div class="text-info">Leave password fields empty if you are not changing it</div>
+                        }
+                        <div class="col-md-6">
+                        @f_text(
+                            aForm("password"),
+                            "Password",
+                            "password",
+                            Map("placeholder"->"Password"),
+                            ""
+                        )
+                        </div>
+                        <div class="col-md-6">
+                        @f_text(
+                            aForm("confirmPass"),
+                            "Confirm Password",
+                            "password",
+                            Map("placeholder"->"Confirm Password"),
+                            ""
+                        )
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">Submit</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@styles = {
+    <link href="@StaticAssets.getUrl("css/select2.min.css")" rel="stylesheet" />
+    <style type="text/css">
+    .select2 { width: 100% !important; }
+    </style>
+}
+
+@scripts = {
+    <script src="@StaticAssets.getUrl("js/select2.min.js")"></script>
+    <script type="text/javascript">
+      $('.js-example-basic-single').select2();
+    </script>
+}

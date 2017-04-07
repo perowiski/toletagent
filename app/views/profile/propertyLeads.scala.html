@@ -1,0 +1,110 @@
+@(map: Map[String, Object])
+
+@import play.mvc.Http;
+
+@request = @{Http.Context.current().request()}
+@path = @{Http.Context.current().request().path()}
+
+@propertyLeads = @{map.get("propertyLeads").asInstanceOf[java.util.List[PropertyLead]]}
+@total = @{map.get("total").asInstanceOf[Long]}
+
+@agent = @{Auth.getAgent}
+
+@profile.leadContainer("Client Requests", styles = styles, scripts = scripts) {
+    <div class="alert alert-info">
+        Property Requests (@total total)
+    </div>
+
+    <div class="panel">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-12 text-right">
+                    <form action="@path" class="form-inline">
+                        <div class="form-group">
+                            <input type="text" name="search" class="input-sm form-control" placeholder="Search">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="daterange" value="" class="form-control" placeholder="Filter by posted date" readonly/>
+                        </div>
+                        <button type="submit" class="btn btn-default">Search</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="panel-body clearfix">
+            <table class="table table-striped" id="table-resp">
+                <thead>
+                    <tr>
+                        <th>Person Details</th>
+                        <th>Requests Details</th>
+                        <th>Property</th>
+                        <th>Sent</th>
+                        <th>Inspection</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for(propertyLead <- propertyLeads) {
+                    <tr>
+                        <td>
+                            <span class="label label-info">@propertyLead.userName</span><br/>
+                            <span class="label label-success">@propertyLead.userPhone</span>
+                            <span class="label label-warning">@propertyLead.userEmail</span>
+                        </td>
+                        <td>
+                            <span class="label label-default">Who: @propertyLead.userType</span><br/>
+                            @if(propertyLead.maxBudget != null) {
+                                <span class="label label-info">Maximum Budget: @formatters.AmtFormatter.format(propertyLead.maxBudget)</span><br/>
+                            }
+                            @if(propertyLead.willingDate != null) {
+                                <span class="label label-success">InspectionDate: @{new Date(propertyLead.willingDate).format("dd MMM, yyyy")}</span><br/>
+                            }
+                            @if(propertyLead.maxBudget != null) {
+                                <span class="label label-info">Maximum Budget: @formatters.AmtFormatter.format(propertyLead.maxBudget)</span><br/>
+                            }
+                            @if(propertyLead.getProperty != null) {
+                                @if(propertyLead.getProperty.beds != null) {
+                                    Beds: @propertyLead.getProperty.beds <br/>
+                                }
+                                Type of property: @{propertyLead.getProperty.`type`} <br/>
+                                Location of property: @{propertyLead.getProperty.address()} <br/>
+                                <a href="@propertyLead.getProperty.link" class="label label-info" target="_blank">@{propertyLead.getProperty.pid}</a>
+                            }
+                        </td>
+                        <td>
+                            <a href="#" class="label label-info" target="_blank">@{propertyLead.pid}</a>
+                        </td>
+                        <td>
+                            @{new Date(propertyLead.created).format("dd MMM, yyyy")}
+                        </td>
+                        <td>
+                            @profile.scheduleInspectionModal(propertyLead.name, "request", propertyLead.id)
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <footer class="panel-footer">
+            <div class="row">
+                <div class="col-sm-4 hidden-xs">
+                </div>
+                <div class="col-sm-3 text-center">
+                        <!--<small class="text-muted inline m-t-small m-b-small">showing 20-30 of 50 items</small>-->
+                </div>
+                <div class="col-sm-5 text-right text-center-sm">
+                @inc.pager(total)
+                </div>
+            </div>
+        </footer>
+    </div>
+
+}
+
+@styles = {
+
+}
+
+@scripts = {
+
+}
+

@@ -1,0 +1,66 @@
+@(title: String = "", styles: Html = Html(""), scripts: Html = Html(""))(content: Html)
+
+@profile.layout(title, styles=req_styles, scripts=req_scripts) {
+    @content
+}
+
+@req_styles = {
+    <link rel="stylesheet" href="@StaticAssets.getUrl("daterange/daterangepicker.css")" />
+    <link rel="stylesheet" href="@StaticAssets.getUrl("datetimepicker/css/bootstrap-datetimepicker.min.css")" />
+    @styles
+}
+
+@req_scripts = {
+    <script src="@StaticAssets.getUrl("daterange/moment.min.js")"></script>
+    <script src="@StaticAssets.getUrl("daterange/daterangepicker.js")"></script>
+    <script type="text/javascript" src="@StaticAssets.getUrl("datetimepicker/js/bootstrap-datetimepicker.min.js")"></script>
+
+    <script type="text/javascript">
+            $(document).ready(function() {
+                $('input[name="daterange"]').daterangepicker({
+                    autoApply: true,
+                    locale: {
+                        format: 'DD-MM-YYYY'
+                    }
+                });
+                $('input[name="daterange"]').val("");
+
+                $('.datetimepicker').datetimepicker({
+                    minDate: moment(),
+                    format: "DD-MM-YYYY HH:mm:ss",
+                });
+                $('.datetimepicker').val("");
+
+                $(".schedule-btn").click(function() {
+                    var form = $(this).closest("form");
+
+                    var obj = form.serializeArray().reduce(function(obj, v) { obj[v.name] = v.value; return obj; }, { });
+                    if(obj.date === "") {
+                        alert("Please enter a date");
+                        return false;
+                    }
+
+                    $('#ajaxWait').show();
+                    jQuery.ajax({
+                        type: "POST",
+                        url : form.attr("action"),
+                        data : form.serialize(),
+                        success : function(data) {
+                            if(data === "success") {
+                                $("#info-box").html("<h4 class='text-info'>You have successfully scheduled an inspection with this client<br/>" +
+                                        "Click <a href='@routes.AgentInspectionsController.index()' class='text-underline' target='_blank'>inspections</a>" +
+                                        " tab to view your inspections</h4>");
+                                $('#info-modal').modal('show');
+                                $('.inspection-modal').modal('hide');
+                            } else {
+                                alert(data);
+                            }
+                            $('#ajaxWait').hide();
+                        }
+                    });
+                    return false;
+                });
+            });
+    </script>
+    @scripts
+}

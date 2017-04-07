@@ -1,0 +1,30 @@
+@(title: String = "", styles: Html = Html(""), scripts: Html = Html(""))(content: Html)
+
+@profile.layout(title, styles=f_styles, scripts=f_scripts) {
+    @content
+}
+
+@f_styles = {
+    @styles
+    <style>
+    iframe{
+        width:100%;
+        border: none;
+    }
+    </style>
+}
+
+@f_scripts = {
+    @scripts
+    <script src="@StaticAssets.getUrl("js/iframeResizer.min.js")" type="text/javascript"></script>
+    <script>iFrameResize({log:true})</script>
+    <script type="text/javascript">
+        $(function(){
+            $('#ajaxWait').show();
+
+            $('iframe').on('load', function(){
+                $('#ajaxWait').hide();
+            });
+        });
+    </script>
+}

@@ -1,0 +1,9 @@
+@()
+
+@agent = @{Auth.getAgent}
+
+@uuid = @{Cookies.get(AuthController.BAU)}
+
+@profile.frame("Post Property") {
+    <iframe src="https://api.tolet.com.ng/property-post?aid=@agent.id&uuid=@uuid"></iframe>
+}

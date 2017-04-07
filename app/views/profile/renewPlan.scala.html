@@ -1,0 +1,98 @@
+@import java.util
+@(modelMap :util.Map[String, Object])
+
+@subscription = @{modelMap.get("subscription").asInstanceOf[Subscription]}
+@plan = @{modelMap.get("plan").asInstanceOf[Plan]}
+@today = @{new Date() }
+
+@profile.layout("Renew Plan", scripts = scripts, styles = styles){
+    <div class="panel panel-default">
+        <div class="panel-body">
+
+            <div class="alert alert-info" role="alert"> You are currently on @subscription.name plan.</div>
+
+            @if(subscription.expiryDate != null){
+                @if(today.after(subscription.expiryDate)){
+                    <div class="alert alert-warning" role="alert"> The plan you want to renew cost &#x20A6;@plan.price</div>
+                    <form action="@routes.AgentSubscriptionController.subscribe" method="POST">
+                        <div class="form-group">
+                            <input  type="hidden" name="planId" value="@plan.id">
+                        </div>
+
+                        <div class="form-group">
+                            <select class="form-control" id="paymentType" name="paymentType" onchange="checkPaymentTypes()" required>
+                                <option value="">Form of Payment</option>
+                            </select>
+                        </div>
+
+                        <div id = "tellerInfo" class="form-group">
+                            <div class="form-group">
+                                <input type="text" name="tellerNumber" required="required" class="form-control" placeholder="Teller Number">
+                            </div>
+
+                            <div class="form-group">
+                                <input type="number" name = "amountPaid" required="required" class="form-control" placeholder="Amount Paid">
+                            </div>
+
+                            <div class="form-group">
+                                <input class="form-control" id="paymentDate" name="paymentDate" placeholder="Payment Date" type="text" required/>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                }else{
+                    <div class="alert alert-danger" role="alert">You can't renew a subscription that has not expired. You may want to change or upgrade your plan.</div>
+                    <a href="@routes.AgentSubscriptionController.changePlan()" class="btn btn-warning btn-sm pull-right">Change/Upgrade Plan</a>
+                }
+            }
+        </div>
+    </div>
+
+
+}
+
+@scripts = {
+
+    <script src="@StaticAssets.getUrl("js/jquery-2.1.1.js")"></script>
+    <script src="@StaticAssets.getUrl("js/plugins/datapicker/bootstrap-datepicker.js")"></script>
+
+    <script>
+
+
+        function loadPaymentTypes(){
+             $.getJSON("/subscription/paymentTypes", function(result,status,xhr){
+                if(status == "success"){
+                     $.each( result, function( key, val ) {
+                        $("#paymentType").append("<option value='"+key+"'>" +val+"</option>");
+                      });
+                }
+            });
+        }
+
+        $(document).ready(function(){
+             loadPaymentTypes();
+              $("#tellerInfo").hide();
+              $('#paymentDate').datepicker({
+                    format: "dd/mm/yyyy"
+              });
+        });
+
+        function checkPaymentTypes(){
+          var paymentType = $("#paymentType").val();
+          console.log(paymentType);
+          if(paymentType == "Teller" ){
+             $("#tellerInfo").show();
+          }else{
+            $("#tellerInfo").hide();
+          }
+        }
+
+    </script>
+}
+
+@styles = {
+
+
+}
+

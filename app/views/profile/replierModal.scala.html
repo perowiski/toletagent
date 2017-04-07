@@ -1,0 +1,18 @@
+@(reply: AgentConnectReply)
+
+<div class="modal-dialog modal-sm">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <span>Reply from @reply.agent.name</span>
+        </div>
+        <div class="modal-body">
+            <span class="label label-info">Name: @reply.agent.name</span><br/>
+            <span class="label label-info">Phone Number: @reply.agent.phone</span><br/>
+            <span class="label label-info">Email address: @reply.agent.email</span><br/>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Ok</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,108 @@
+@(map: Map[String, Object])
+
+@import play.mvc.Http;
+
+@request = @{Http.Context.current().request()}
+@path = @{Http.Context.current().request().path()}
+
+@leads = @{map.get("leads").asInstanceOf[java.util.List[AgentLead]]}
+@total = @{map.get("total").asInstanceOf[Long]}
+
+@agent = @{Auth.getAgent}
+
+@profile.leadContainer("My Unique leads", styles = styles, scripts = scripts) {
+    <div class="alert alert-info">
+        <span>My Unique Leads</span>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <span class="btn btn-default">Total = @total</span>
+            <span class="btn btn-default">Total Amount Spent = ₦ @{total * 500}</span>
+            <span class="btn btn-default">Credit Balance = ₦ @formatters.AmtFormatter.format(agent.balance)</span>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-12 text-right">
+                    <form action="@path" class="form-inline">
+                        <div class="form-group">
+                            <input type="text" name="search" class="input-sm form-control" placeholder="Search">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="daterange" value="" class="form-control" placeholder="Filter by posted date" readonly/>
+                        </div>
+                        <button type="submit" class="btn btn-default">Search</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="panel-body clearfix">
+            <table class="table table-striped" id="table-resp">
+                <thead>
+                    <tr>
+                        <th>Client Name</th>
+                        <th>Client Phone Number</th>
+                        <th>Client Email Address</th>
+                        <th>Request details</th>
+                        <th>Cost of Acquisition</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for(lead <- leads) {
+                    <tr>
+                        <td>
+                            @lead.name
+                        </td>
+                        <td>
+                            @lead.phone
+                        </td>
+                        <td>
+                            @lead.email
+                        </td>
+                        <td>
+                            <a class="btn btn-info btn-xs" target="_blank" href="@routes.AgentDashboardController.propertyLeads()?id=@lead.propertyLead">Request</a>
+                            @if(lead.propertyLead != null) {
+                                @**
+                                @if(lead.propertyLead.maxBudget != null) {
+                                    <span class="label label-info">Maximum Budget: @formatters.AmtFormatter.format(lead.propertyLead.maxBudget)</span><br/>
+                                }
+                                @if(lead.propertyLead.pid != null){
+                                    Beds: <br/>
+                                }
+                                Type of property: <br/>
+                                Location of property:
+                                **@
+                            }
+                        </td>
+                        <td>
+                            ₦ @formatters.AmtFormatter.format(lead.deducted)
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <footer class="panel-footer">
+            <div class="row">
+                <div class="col-sm-4 hidden-xs">
+                </div>
+                <div class="col-sm-3 text-center">
+                        <!--<small class="text-muted inline m-t-small m-b-small">showing 20-30 of 50 items</small>-->
+                </div>
+                <div class="col-sm-5 text-right text-center-sm">
+                @inc.pager(total)
+                </div>
+            </div>
+        </footer>
+    </div>
+
+}
+
+@styles = {
+
+}
+
+@scripts = {
+
+}
+

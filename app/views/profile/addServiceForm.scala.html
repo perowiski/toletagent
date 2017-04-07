@@ -1,0 +1,56 @@
+@(sForm: Form[Service], service: Service)
+
+@import fields._
+@import scala.collection.immutable.Map
+
+@url = @{
+    if(service.id != null) routes.ServiceController.update(service.id)
+    else routes.ServiceController.create()
+}
+
+@profile.layout("Agent Add Service Form", styles=styles, scripts=scripts) {
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            Service Form
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-8 col-md-offset-2">
+                    <form method="post" action="@url">
+                        <div class="col-md-12">
+                            @f_text(
+                                sForm("name"),
+                                "Name",
+                                "text",
+                                Map("placeholder" -> "Service Name"),
+                                ""
+                            )
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="form-group  @if(sForm("description").hasErrors) {has-error}">
+                                <label class="control-label">Description</label>
+                                <textarea class="form-control" rows="10" placeholder="Description" name="description">@sForm("description").value()</textarea>
+                                <span class="help-block">@{
+                                    sForm("description").error.map { error => error.message }
+                                }</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary pull-right">Submit</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@styles = {
+}
+
+@scripts = {
+}

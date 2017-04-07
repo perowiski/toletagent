@@ -1,0 +1,26 @@
+@(n: String, t: String, id: Long)
+
+<button type="button" class="btn btn-xs btn-primary" data-toggle="modal" href="#@id-inspection-modal">Schedule Inspection</button>
+<div id="@id-inspection-modal" class="modal fade inspection-modal">
+    <div class="modal-dialog">
+        <form action="@routes.AgentInspectionsController.schedule()" method="post" class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h5>Schedule inspection for @n</h5>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="position: relative">
+                    <input type="hidden" name="type" value="@t">
+                    <input type="hidden" name="id" value="@id">
+                    <input type="text" name="date" id="date" class="datetimepicker form-control" placeholder="Choose a date for inspection" required="required" >
+                </div>
+
+                <div id="loadingR" class="sk-spinner sk-spinner-three-bounce">
+                        </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info schedule-btn">Schedule</button>
+            </div>
+        </form>
+    </div>
+</div>
