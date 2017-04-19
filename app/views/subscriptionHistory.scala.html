@@ -56,12 +56,12 @@
                             </td>
 
                             <td>
-                                @subscription.created
+                                @Utility.formatDate(subscription.created, "dd-MM-yyyy HH:mm:ss")
                             </td>
 
                             <td>
                                     @if(subscription.activationDate != null){
-                                        @subscription.activationDate
+                                        @Utility.formatDate(subscription.activationDate, "dd-MM-yyyy HH:mm:ss")
                                     }else{
                                         N/A
                                     }
@@ -70,7 +70,7 @@
 
                             <td>
                                 @if(subscription.expiryDate != null){
-                                    @subscription.expiryDate
+                                    @Utility.formatDate(subscription.expiryDate, "dd-MM-yyyy HH:mm:ss")
                                 }else{
                                     N/A
                                 }
@@ -150,7 +150,7 @@
                                                                     <tr>
                                                                         <td>@product.productType.name</td>
                                                                         <td>@product.maximum</td>
-                                                                        <td>@product.getRemainder</td>
+                                                                        <td>@product.remainder</td>
                                                                     </tr>
                                                                 }
                                                             }
@@ -193,23 +193,18 @@
                                                                 @{
                                                                     (subscription.paymentDetail.asInstanceOf[TellerPaymentDetail]).getTellerNumber
                                                                 }
-
                                                             </li>
                                                         }
 
                                                         @if(subscription.paymentDetail.isInstanceOf[TellerPaymentDetail]){
                                                             <li class="list-group-item">
-                                                                Amount Paid: &#x20A6;
-                                                                @{
-                                                                    (subscription.paymentDetail.asInstanceOf[TellerPaymentDetail]).amountPaid
-                                                                }
+                                                                Amount Paid: &#x20A6;@{(subscription.paymentDetail.asInstanceOf[TellerPaymentDetail]).amountPaid}
                                                             </li>
                                                         }
 
                                                         @if(subscription.paymentDetail.isInstanceOf[TellerPaymentDetail]){
                                                             <li class="list-group-item">
-                                                                Payment Date:
-                                                                    @simpleDateFormat.format((subscription.paymentDetail.asInstanceOf[TellerPaymentDetail]).paymentDate.getTime).toString
+                                                                Payment Date: @Utility.formatDate((subscription.paymentDetail.asInstanceOf[TellerPaymentDetail]).paymentDate.getTime, "dd-MM-yyyy")
                                                             </li>
                                                         }
 

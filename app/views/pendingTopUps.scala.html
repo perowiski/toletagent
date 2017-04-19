@@ -57,7 +57,7 @@
                                     @subscriptionPaymentTopUp.subscription.agent.name
                                 </td>
                                 <td>
-                                    @subscriptionPaymentTopUp.created
+                                    @Utility.formatDate(subscriptionPaymentTopUp.created, "dd-MM-yyyy HH:mm:ss")
                                 </td>
                                 <td>
                                     @subscriptionPaymentTopUp.subscription.paymentType.toString
@@ -155,18 +155,12 @@
 
                                                         @if(subscriptionPaymentTopUp.paymentDetail.isInstanceOf[TellerPaymentDetail]){
                                                             <li class="list-group-item">
-                                                                Amount Paid: &#x20A6;
-                                                                @{
-                                                                    (subscriptionPaymentTopUp.paymentDetail.asInstanceOf[TellerPaymentDetail]).amountPaid
-                                                                }
+                                                                Amount Paid: &#x20A6;@{(subscriptionPaymentTopUp.paymentDetail.asInstanceOf[TellerPaymentDetail]).amountPaid}
                                                             </li>
                                                         }
                                                         @if(subscriptionPaymentTopUp.paymentDetail.isInstanceOf[TellerPaymentDetail]){
                                                             <li class="list-group-item">
-                                                                Payment Date:
-                                                                @{
-                                                                    (subscriptionPaymentTopUp.paymentDetail.asInstanceOf[TellerPaymentDetail]).paymentDate.getTime
-                                                                }
+                                                                Payment Date: @Utility.formatDate((subscriptionPaymentTopUp.paymentDetail.asInstanceOf[TellerPaymentDetail]).paymentDate.getTime, "dd-MM-yyyy")
                                                             </li>
                                                         }
                                                     </ul>

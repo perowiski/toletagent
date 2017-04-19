@@ -43,6 +43,9 @@ public class SubscriptionPaymentTopUp extends Model implements Comparable<Subscr
     @Convert(converter= SubscriptionProductConverter.class)
     public List<Subscription.Product> products = new ArrayList<>();
 
+    @Getter @Setter
+    public Date lastDateModified = new Date();
+
     @Override
     public int compareTo(SubscriptionPaymentTopUp o) {
         return this.created.compareTo(o.created);

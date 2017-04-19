@@ -95,9 +95,8 @@
                             </td>
 
                             <td>
-
                             @if(agent.currentSubscription != null){
-                                @agent.currentSubscription.created
+                                @Utility.formatDate(agent.currentSubscription.created, "dd-MM-yyyy HH:mm:ss")
                             }else{
                                 N/A
                             }
@@ -107,7 +106,7 @@
 
                             @if(agent.currentSubscription != null){
                                 @if(agent.currentSubscription.activationDate != null){
-                                    @agent.currentSubscription.activationDate
+                                    @Utility.formatDate(agent.currentSubscription.activationDate, "dd-MM-yyyy HH:mm:ss")
                                 }else{
                                     N/A
                                 }
@@ -120,7 +119,7 @@
                             <td>
                             @if(agent.currentSubscription != null){
                                 @if(agent.currentSubscription.expiryDate != null){
-                                    @agent.currentSubscription.expiryDate
+                                    @Utility.formatDate(agent.currentSubscription.expiryDate, "dd-MM-yyyy HH:mm:ss")
                                 }else{
                                     N/A
                                 }

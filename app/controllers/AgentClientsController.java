@@ -67,6 +67,20 @@ public class AgentClientsController extends Controller {
     }
 
     public Result add() {
+        ProductType productType = ProductType.CLIENT_DETAIL;
+
+        Subscription subscription = Auth.getAgent().currentSubscription;
+
+
+        for (Subscription.Product p : subscription.products) {
+            System.out.println(p.remainder + " " + p.productType);
+            if ( ( p.productType == productType ) && ( p.remainder == 0 || p.remainder == null ) ) {
+                flash("exhausted", "You have exhausted this product!");
+                return redirect(routes.AgentClientsController.index());
+            }
+        }
+
+
         return ok(addAgentClient.render(cForm, new AgentClient()));
     }
 
@@ -82,20 +96,22 @@ public class AgentClientsController extends Controller {
         client.agent = agent;
         db.save(client);
 
-        Subscription subscription = db.findOne(Subscription.class, DBFilter.get().field("id").eq(agent.currentSubscription.id));
+        Subscription subscription = Auth.getAgent().currentSubscription;
 
         for (Subscription.Product product : subscription.products) {
-            if (product.productType == ProductType.CLIENT_DETAIL){
-                product.setRemainder(product.remainder - 1);
-                subscription.setProducts(subscription.products);
-                db.save(subscription);
+            if (product.productType == ProductType.CLIENT_DETAIL){System.out.println(product.remainder + " Before");
+                product.remainder = product.remainder - 1;
+                System.out.println(product.remainder + " After");
             }
         }
 
-        agent.setCurrentSubscription(subscription);
+        for (Subscription.Product product : subscription.products){
+            System.out.println(product.remainder + " Pr");
+        }
 
-        DBService.Q.merge(agent);
-        Auth.cacheAgent(agent);
+        agent.setCurrentSubscription(subscription);
+        db.save(subscription);
+        db.merge(agent);
 
         return redirect(routes.AgentClientsController.index());
     }

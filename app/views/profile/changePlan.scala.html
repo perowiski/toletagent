@@ -4,52 +4,68 @@
 @subscription = @{modelMap.get("subscription").asInstanceOf[Subscription]}
 @plans = @{modelMap.get("plans").asInstanceOf[java.util.List[Plan]]}
 @pendingSubscription = @{modelMap.get("pendingSubscription").asInstanceOf[Subscription]}
+@pendingSubscriptionPaymentTopUp = @{modelMap.get("pendingSubscriptionPaymentTopUp").asInstanceOf[SubscriptionPaymentTopUp]}
+@basicPlan = @{Utility.getBasicPlanName()}
+@plan = @{modelMap.get("plan").asInstanceOf[Plan]}
+@today = @{new Date() }
 
 @profile.layout("Change/Upgrade Plan", scripts = scripts, styles = styles){
     <div class="panel panel-default">
         <div class="panel-body">
-            <div class="alert alert-info" role="alert"> You are currently on @subscription.name plan.</div>
+            <div class="alert alert-info" role="alert">
+                @if(today.after(subscription.expiryDate)){
+                    Your @subscription.duration day(s) @subscription.name subscription that runs from @Utility.formatDate(subscription.activationDate, "dd-MM-yyyy HH:mm:ss") to @Utility.formatDate(subscription.expiryDate, "dd-MM-yyyy HH:mm:ss") has expired.
+                }else{
+                    You are currently on @subscription.name. Your @subscription.duration day(s) subscription runs from @Utility.formatDate(subscription.activationDate, "dd-MM-yyyy HH:mm:ss") to @Utility.formatDate(subscription.expiryDate, "dd-MM-yyyy HH:mm:ss")
+                }
+            </div>
 
-            @if(pendingSubscription == null){
-                <div id="priceLabel" role="alert"></div>
-                <form action="@routes.AgentSubscriptionController.subscribe" method="POST">
-                    <div class="form-group">
-                        <select class="form-control" id="plan" name="planId" onchange="loadProductInformation()" required>
-                            <option value="">Select a plan</option>
-                            @for(plan <- plans){
-                                <option value="@plan.id">@plan.name</option>
-                            }
-
-                        </select>
-                    </div>
-                    <div class="form-group">
-
-                        <select class="form-control" id="paymentType" name="paymentType" onchange="checkPaymentTypes()" required>
-                            <option value="">Form of Payment</option>
-                        </select>
-
-                    </div>
-                    <div id = "tellerInfo" class="form-group">
+            @if(pendingSubscriptionPaymentTopUp == null){
+                @if(pendingSubscription == null){
+                    <div id="priceLabel" role="alert"></div>
+                    <form action="@routes.AgentSubscriptionController.subscribe" method="POST">
                         <div class="form-group">
-                            <input type="text" name="tellerNumber" required="required" class="form-control" placeholder="Teller Number">
+                            <select class="form-control" id="plan" name="planId" onchange="loadProductInformation()" required>
+                                <option value="">Select a plan</option>
+                                @for(plan <- plans){
+                                    <option value="@plan.id">@plan.name</option>
+                                }
+                            </select>
                         </div>
 
-                        <div class="form-group">
-                            <input type="number" name = "amountPaid" required="required" class="form-control" placeholder="Amount Paid">
+                        <div id = "paymentTypesWrapper">
+
+                            <div class="form-group">
+                                <select class="form-control" id="paymentType" name="paymentType" onchange="checkPaymentTypes()" required>
+                                    <option value="">Form of Payment</option>
+                                </select>
+                            </div>
+                            <div id = "tellerInfo" class="form-group">
+                                <div class="form-group">
+                                    <input type="text" name="tellerNumber" required="required" class="form-control" placeholder="Teller Number">
+                                </div>
+
+                                <div class="form-group">
+                                    <input type="number" name = "amountPaid" required="required" class="form-control" placeholder="Amount Paid">
+                                </div>
+
+                                <div class="form-group">
+                                    <input class="form-control" id="paymentDate" name="paymentDate" placeholder="Payment Date" type="text" required/>
+                                </div>
+                            </div>
+
                         </div>
 
-                        <div class="form-group">
-                            <input class="form-control" id="paymentDate" name="paymentDate" placeholder="Payment Date" type="text" required/>
-                        </div>
-                    </div>
 
-                    <button type="submit" class="btn btn-primary">Submit</button>
-                </form>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+
+                    </form>
+                }else{
+                    <div class="alert alert-danger" role="alert">You can't change or upgrade your plan because you have a pending subscription that is subjected to the administrator approval.</div>
+                }
             }else{
-                <div class="alert alert-danger" role="alert">The system has detected that you have a pending subscription that is subjected to the administrator approval. Try again later.</div>
+                <div class="alert alert-danger" role="alert">You can't change or upgrade your plan because you have a pending top up that is subjected to the administrator approval.</div>
             }
-
-
         </div>
     </div>
 
@@ -74,6 +90,14 @@
                     console.log(result.name);
                      $("#priceLabel").addClass("alert alert-warning");
                     $("#priceLabel").html("The price of the selected plan is &#x20A6;"+result.price);
+                    if(result.name == "@basicPlan"){
+                        console.log(result.name);
+                        $("#paymentTypesWrapper").hide();
+                        //$("#tellerInfo").hide();
+                    }else{
+                        $("#paymentTypesWrapper").show();
+                        //$("#tellerInfo").hide();
+                    }
                 }
             });
         }
@@ -90,7 +114,8 @@
 
         $(document).ready(function(){
              loadPaymentTypes();
-              $("#tellerInfo").hide();
+             $("#paymentTypesWrapper").hide();
+             $("#tellerInfo").hide();
               $('#paymentDate').datepicker({
                     format: "dd/mm/yyyy"
               });
@@ -105,6 +130,7 @@
             $("#tellerInfo").hide();
           }
         }
+
 
     </script>
 }

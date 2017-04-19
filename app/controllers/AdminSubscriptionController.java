@@ -1,25 +1,18 @@
 package controllers;
 
 import authority.Secured;
-import com.google.gson.Gson;
 import models.*;
 import models.Subscription;
-import models_enums.PaymentType;
 import play.data.DynamicForm;
-import play.data.Form;
 import play.data.FormFactory;
 import play.db.jpa.Transactional;
-import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
 import pojos.*;
 import services.DBFilter;
 import services.DBService;
-
 import javax.inject.Inject;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -126,34 +119,44 @@ public class AdminSubscriptionController extends Controller{
         modelMap.put("subscription", subscription);
         modelMap.put("subscriptionPaymentTopUpList", subscriptionPaymentTopUpList);
         modelMap.put("total", total);
+
         return ok(views.html.subscriptionTopUp.render(modelMap));
     }
 
     public Result activatePendingSubscription(){
+
+        boolean allowSubscriptionRollover = true;
+        boolean allowTopUpRollover = true;
+
         DynamicForm requestData = formFactory.form().bindFromRequest();
         Long subscriptionId = Long.parseLong(requestData.get("subscriptionId"));
         Subscription pendingSubscription = db.findOne(Subscription.class, subscriptionId);
         pendingSubscription.setIsPending(false);
         pendingSubscription.setIsActive(true);
 
-        if(!pendingSubscription.getName().equalsIgnoreCase("Basic")){
+        if(!pendingSubscription.getName().equals(Utility.getBasicPlanName())){
             Date today = new Date();
             pendingSubscription.setActivationDate(today);
-            pendingSubscription.setExpiryDate(addDays(today, pendingSubscription.getDuration()));
+            pendingSubscription.setExpiryDate(Utility.addDays(today, pendingSubscription.getDuration()));
         }
 
         Agent agent = pendingSubscription.getAgent();
         if(agent.getCurrentSubscription() != null){
-            rollOverExistingSubscriptionProducts(agent.getCurrentSubscription(), pendingSubscription);
-            DBFilter filter = DBFilter.get();
-            filter.field("isPending", false);
-            filter.field("subscription", agent.getCurrentSubscription());
-            SubscriptionPaymentTopUp existingSubscriptionPaymentTopUp = null;
-            List<SubscriptionPaymentTopUp> existingSubscriptionPaymentTopUps
-                    = db.find(SubscriptionPaymentTopUp.class, filter, "created DESC");
-            if(!existingSubscriptionPaymentTopUps.isEmpty()){
-                existingSubscriptionPaymentTopUp = existingSubscriptionPaymentTopUps.get(0);
-                rollOverExistingSubscriptionProductTopUps(pendingSubscription, existingSubscriptionPaymentTopUp);
+
+            if(allowSubscriptionRollover) {
+                rollOverExistingSubscriptionProducts(agent.getCurrentSubscription(), pendingSubscription);
+            }
+            if(allowTopUpRollover){
+                DBFilter filter = DBFilter.get();
+                filter.field("isPending", false);
+                filter.field("subscription", agent.getCurrentSubscription());
+                SubscriptionPaymentTopUp existingSubscriptionPaymentTopUp = null;
+                List<SubscriptionPaymentTopUp> existingSubscriptionPaymentTopUps
+                        = db.find(SubscriptionPaymentTopUp.class, filter, "created DESC");
+                if(!existingSubscriptionPaymentTopUps.isEmpty()){
+                    existingSubscriptionPaymentTopUp = existingSubscriptionPaymentTopUps.get(0);
+                    rollOverExistingSubscriptionProductTopUps(pendingSubscription, existingSubscriptionPaymentTopUp);
+                }
             }
         }
         agent.setCurrentSubscription(pendingSubscription);
@@ -170,7 +173,7 @@ public class AdminSubscriptionController extends Controller{
         for(Subscription.Product currentSubscriptionProduct : currentSubscriptionProducts){
             for(Subscription.Product pendingSubscriptionProduct : pendingSubscriptionProducts){
                 if(currentSubscriptionProduct.getProductType() == pendingSubscriptionProduct.getProductType()){
-                    if(currentSubscriptionProduct.getRemainder() != null){
+                    if(currentSubscriptionProduct.getRemainder() != null && pendingSubscriptionProduct.getRemainder() != null){
                         pendingSubscriptionProduct.setRemainder(pendingSubscriptionProduct.getRemainder()
                          + currentSubscriptionProduct.getRemainder());
                     }
@@ -187,7 +190,7 @@ public class AdminSubscriptionController extends Controller{
         for(Subscription.Product pendingSubscriptionProduct : pendingSubscriptionProducts){
             for(Subscription.Product existingSubscriptionProductTopUp : existingSubscriptionProductTopUps){
                 if(pendingSubscriptionProduct.getProductType() == existingSubscriptionProductTopUp.getProductType()){
-                    if(existingSubscriptionProductTopUp.getRemainder() != null){
+                    if(existingSubscriptionProductTopUp.getRemainder() != null && pendingSubscriptionProduct.getRemainder() != null){
                         pendingSubscriptionProduct.setRemainder(pendingSubscriptionProduct.getRemainder()
                         + existingSubscriptionProductTopUp.getRemainder());
                     }
@@ -239,11 +242,5 @@ public class AdminSubscriptionController extends Controller{
         return redirect(routes.AdminSubscriptionController.pendingTopUps());
     }
 
-    private Date addDays(Date date, int days) {
-        GregorianCalendar cal = new GregorianCalendar();
-        cal.setTime(date);
-        cal.add(Calendar.DATE, days);
-        return cal.getTime();
-    }
 
 }

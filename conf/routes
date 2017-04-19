@@ -29,6 +29,8 @@ GET         /subscription/plan/:id                          controllers.AgentSub
 GET         /subscription/paymentTypes                      controllers.AgentSubscriptionController.paymentTypes
 POST        /profile/subscribe                              controllers.AgentSubscriptionController.subscribe()
 POST        /profile/topUp                                  controllers.AgentSubscriptionController.topUp()
+GET         /profile/init-agents-subscription               controllers.AgentSubscriptionController.initializeAgentsSubscription()
+
 
 POST        /subscription/activatePendingSubscription       controllers.AdminSubscriptionController.activatePendingSubscription()
 POST        /subscription/activatePendingTopUp              controllers.AdminSubscriptionController.activatePendingTopUp()
@@ -37,6 +39,8 @@ GET         /subscription-history/agent/:id                 controllers.AdminSub
 GET         /subscription-topups/:id                        controllers.AdminSubscriptionController.subscriptionTopUps(id :Long)
 GET         /pending-subscription                           controllers.AdminSubscriptionController.pendingSubscriptions()
 GET         /pending-topups                                 controllers.AdminSubscriptionController.pendingTopUps()
+
+
 
 
 GET         /profile/clients                               controllers.AgentClientsController.index()

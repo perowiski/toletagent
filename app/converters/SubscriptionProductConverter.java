@@ -28,7 +28,7 @@ public class SubscriptionProductConverter implements AttributeConverter<List, St
         try {
             if(meta == null) return "";
             return GSON.toJson(meta, listType);
-        } catch (NumberFormatException ex) {
+        } catch (Exception ex) {
             return null;
         }
     }

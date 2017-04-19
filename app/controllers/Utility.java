@@ -18,6 +18,7 @@ import java.lang.reflect.Field;
 import java.net.URLDecoder;
 import java.text.BreakIterator;
 import java.text.Normalizer;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -214,6 +215,22 @@ public class Utility extends Controller {
             totalCost = totalCost + (product.getUnitPrice() * product.getMaximum());
         }
         return totalCost;
+    }
+
+    public static String formatDate(Date date, String pattern){
+        SimpleDateFormat dateFormat = new SimpleDateFormat(pattern);
+        return dateFormat.format(date);
+    }
+
+    public static String getBasicPlanName(){
+        return "Basic";
+    }
+
+    public static Date addDays(Date date, int days) {
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.setTime(date);
+        cal.add(Calendar.DATE, days);
+        return cal.getTime();
     }
 
 }

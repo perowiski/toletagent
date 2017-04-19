@@ -8,7 +8,7 @@ import java.util.Map;
  */
 public enum PaymentType {
 
-    TELLER("Teller"), PAGA("Paga"), FREE("Free");
+    TELLER("Teller"),FREE("Free");
 
     private String paymentType;
 

@@ -1,6 +1,7 @@
 package services;
 
 import controllers.Auth;
+import controllers.Utility;
 import models.*;
 import models_enums.PaymentType;
 import models_enums.ProductType;
@@ -31,8 +32,8 @@ public class ApiSave {
     public static void saveAgent(Agent agent) {
         Agent o = DBService.Q.findOne(Agent.class, agent.id);
         if (o == null) {
-            enableDefaultPlan(agent, 1);
             DBService.Q.persist(agent);
+            enableDefaultPlan(agent);
             o = agent;
         } else {
             ApiSave.merge(o, agent);
@@ -44,9 +45,9 @@ public class ApiSave {
         System.out.println(agent.name);
     }
 
-    public static void enableDefaultPlan(Agent agent, long planId){
+    public static void enableDefaultPlan(Agent agent){
         DBFilter filter = DBFilter.get();
-        filter.field("id", planId);
+        filter.field("name", Utility.getBasicPlanName());
         Plan plan = DBService.Q.findOne(Plan.class, filter);
         Subscription subscription = new Subscription();
         subscription.setName(plan.getName());
@@ -54,6 +55,11 @@ public class ApiSave {
         subscription.setIsPending(false);
         subscription.setIsActive(true);
         subscription.setPaymentType(PaymentType.FREE);
+        subscription.setDuration(plan.getDuration());
+
+        Date today = new Date();
+        subscription.setActivationDate(today);
+        subscription.setExpiryDate(Utility.addDays(today, subscription.getDuration()));
 
         List<Product> planProducts =  plan.getProducts();
         ArrayList<Subscription.Product> subscriptionProducts = new ArrayList<>();
@@ -65,9 +71,11 @@ public class ApiSave {
             subscriptionProducts.add(subscriptionProduct);
         }
         subscription.setProducts(subscriptionProducts);
+        subscription.setAgent(agent);
         DBService.Q.save(subscription);
         agent.setCurrentSubscription(subscription);
         DBService.Q.merge(agent);
+        DBService.J.em().flush();
     }
 
     public static void merge(Agent o, Agent n) {

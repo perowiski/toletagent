@@ -75,6 +75,9 @@ public class Subscription extends Model{
         return productTypes;
     }
 
+    @Getter @Setter
+    public Date lastDateModified = new Date();
+
     public static class Product extends models.Product implements Serializable{
         @Getter @Setter
         public Integer remainder;

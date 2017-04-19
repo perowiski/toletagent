@@ -1,13 +1,9 @@
 package controllers;
 
 import authority.SecuredAgent;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.Gson;
 import models.*;
 import models_enums.PaymentType;
 import models_enums.ProductType;
-import play.data.DynamicForm;
 import play.data.Form;
 import play.data.FormFactory;
 import play.db.jpa.Transactional;
@@ -19,6 +15,7 @@ import pojos.Param;
 import pojos.SubscriptionForm;
 import pojos.TellerPaymentDetail;
 import pojos.TopUpForm;
+import services.ApiSave;
 import services.DBFilter;
 import services.DBService;
 
@@ -36,11 +33,44 @@ public class AgentSubscriptionController extends Controller{
 
     private final DBService db;
     private final FormFactory formFactory;
+    private final Form<AgentClient> cForm;
 
     @Inject
-    public AgentSubscriptionController(FormFactory formFactory, DBService db) {
+         public AgentSubscriptionController(FormFactory formFactory, DBService db) {
         this.formFactory = formFactory;
         this.db = db;
+        this.cForm = formFactory.form(AgentClient.class);
+    }
+
+
+    public Result enableDefaultPlan(){
+        Agent agent = Auth.getAgent();
+        //enableDefaultPlan
+        DBFilter filter = DBFilter.get();
+        filter.field("name", Utility.getBasicPlanName());
+        Plan plan = DBService.Q.findOne(Plan.class, filter);
+        Subscription subscription = new Subscription();
+        subscription.setName(plan.getName());
+        subscription.setPrice(plan.getPrice());
+        subscription.setIsPending(false);
+        subscription.setIsActive(true);
+        subscription.setPaymentType(PaymentType.FREE);
+
+        List<Product> planProducts =  plan.getProducts();
+        ArrayList<Subscription.Product> subscriptionProducts = new ArrayList<>();
+        for(Product planProduct : planProducts){
+            Subscription.Product subscriptionProduct = new Subscription.Product();
+            subscriptionProduct.setRemainder(planProduct.getMaximum());
+            subscriptionProduct.setMaximum(planProduct.getMaximum());
+            subscriptionProduct.setProductType(planProduct.getProductType());
+            subscriptionProducts.add(subscriptionProduct);
+        }
+        subscription.setProducts(subscriptionProducts);
+        subscription.setAgent(agent);
+        DBService.Q.save(subscription);
+        agent.setCurrentSubscription(subscription);
+        DBService.Q.merge(agent);
+        return ok("Sucessfull");
     }
 
     public Result index(){
@@ -71,7 +101,6 @@ public class AgentSubscriptionController extends Controller{
         if(!pendingSubscriptionPaymentTopUpList.isEmpty()){
             pendingSubscriptionPaymentTopUp = pendingSubscriptionPaymentTopUpList.get(0);
         }
-        System.out.println(pendingSubscriptionPaymentTopUp);
         modelMap.put("subscription", subscription);
         modelMap.put("subscriptionPaymentTopUp", subscriptionPaymentTopUp);
         modelMap.put("pendingSubscription", pendingSubscription);
@@ -86,8 +115,7 @@ public class AgentSubscriptionController extends Controller{
         Plan plan = db.findOne(Plan.class, DBFilter.get().field("name", subscription.getName()));
         DBFilter filter = DBFilter.get();
         filter.field("plan", plan);
-        filter.field("maximum").notNull();
-        System.out.println(plan.id);
+        filter.field("unitPrice").notNull();
         List<Product> products = db.find(Product.class, filter);
 
         DBFilter filter3 = DBFilter.get();
@@ -110,7 +138,7 @@ public class AgentSubscriptionController extends Controller{
     public Result changePlan(){
         Agent agent = Auth.getAgent();
         Subscription subscription = agent.getCurrentSubscription();
-        List<Plan> plans = db.find(Plan.class, DBFilter.get());
+        List<Plan> plans = db.find(Plan.class, DBFilter.get().field("name").ne(subscription.getName()));
         Map<String, Object> modelMap = new HashMap<>();
         modelMap.put("plans", plans);
         modelMap.put("subscription", subscription);
@@ -122,15 +150,46 @@ public class AgentSubscriptionController extends Controller{
         if(!pendingSubscriptionList.isEmpty()){
             pendingSubscription = pendingSubscriptionList.get(0);
         }
+
+        DBFilter filter2 = DBFilter.get();
+        filter2.field("isPending", true);
+        filter2.field("subscription", subscription);
+        SubscriptionPaymentTopUp pendingSubscriptionPaymentTopUp = null;
+        List<SubscriptionPaymentTopUp> pendingSubscriptionPaymentTopUpList = db.find(SubscriptionPaymentTopUp.class, filter2, "created DESC");
+        if(!pendingSubscriptionPaymentTopUpList.isEmpty()){
+            pendingSubscriptionPaymentTopUp = pendingSubscriptionPaymentTopUpList.get(0);
+        }
+
         modelMap.put("pendingSubscription", pendingSubscription);
+        modelMap.put("pendingSubscriptionPaymentTopUp", pendingSubscriptionPaymentTopUp);
         return ok(views.html.profile.changePlan.render(modelMap));
     }
 
     public Result renewPlan(){
         Agent agent = Auth.getAgent();
         Subscription subscription = agent.getCurrentSubscription();
-        Plan plan = db.findOne(Plan.class, DBFilter.get().field("name", subscription.name));
+        Plan plan = db.findOne(Plan.class, DBFilter.get().field("name", subscription.getName()));
         Map<String, Object> modelMap = new HashMap<>();
+        DBFilter filter = DBFilter.get();
+        filter.field("isPending", true);
+        filter.field("agent", agent);
+        Subscription pendingSubscription = null;
+        List<Subscription> pendingSubscriptionList = db.find(Subscription.class, filter, "created DESC");
+        if(!pendingSubscriptionList.isEmpty()) {
+            pendingSubscription = pendingSubscriptionList.get(0);
+        }
+
+        DBFilter filter2 = DBFilter.get();
+        filter2.field("isPending", true);
+        filter2.field("subscription", subscription);
+        SubscriptionPaymentTopUp pendingSubscriptionPaymentTopUp = null;
+        List<SubscriptionPaymentTopUp> pendingSubscriptionPaymentTopUpList = db.find(SubscriptionPaymentTopUp.class, filter2, "created DESC");
+        if(!pendingSubscriptionPaymentTopUpList.isEmpty()){
+            pendingSubscriptionPaymentTopUp = pendingSubscriptionPaymentTopUpList.get(0);
+        }
+
+        modelMap.put("pendingSubscription", pendingSubscription);
+        modelMap.put("pendingSubscriptionPaymentTopUp", pendingSubscriptionPaymentTopUp);
         modelMap.put("plan", plan);
         modelMap.put("subscription", subscription);
         return ok(views.html.profile.renewPlan.render(modelMap));
@@ -182,8 +241,18 @@ public class AgentSubscriptionController extends Controller{
         subscription.setName(plan.getName());
         subscription.setPrice(plan.getPrice());
         subscription.setDuration(plan.getDuration());
-        subscription.setIsPending(true);
-        subscription.setIsActive(false);
+        Date today = new Date();
+        if(subscription.getName().equals(Utility.getBasicPlanName())){
+            subscription.setIsPending(false);
+            subscription.setIsActive(true);
+            subscription.setActivationDate(today);
+            subscription.setExpiryDate(Utility.addDays(today, subscription.getDuration()));
+
+        }else{
+            subscription.setIsPending(true);
+            subscription.setIsActive(false);
+        }
+
         if(subscriptionForm.getPaymentType().equals("Teller")){
             TellerPaymentDetail tellerPaymentDetail = new TellerPaymentDetail();
             tellerPaymentDetail.setAmountPaid(Double.valueOf(subscriptionForm.getAmountPaid()));
@@ -233,10 +302,10 @@ public class AgentSubscriptionController extends Controller{
         Plan plan = db.findOne(Plan.class, DBFilter.get().field("name", subscription.getName()));
         ArrayList<Subscription.Product> topUpProducts = new ArrayList<>();
         for(ProductType productType : ProductType.values()){
-            if(properties.contains(productType.name)){
+            if(properties.contains(productType.getRep())){
                 Subscription.Product product = new Subscription.Product();
                 Double unitPrice = getUnitPrice(productType, plan);
-                String unit = requestParameters.get(productType.name)[0];
+                String unit = requestParameters.get(productType.getRep())[0];
                 product.setUnitPrice(unitPrice);
                 product.setMaximum(Integer.valueOf(unit));
                 product.setRemainder(Integer.valueOf(unit));
@@ -259,8 +328,8 @@ public class AgentSubscriptionController extends Controller{
                 e.printStackTrace();
             }
         }
-        for (PaymentType paymentType : PaymentType.values()){
-            if(paymentType.toString().equals(topUpForm.getPaymentType())){
+        for (PaymentType paymentType : PaymentType.values()) {
+            if(paymentType.toString().equals(topUpForm.getPaymentType())) {
                 subscriptionPaymentTopUp.setPaymentType(paymentType);
             }
         }
@@ -281,4 +350,23 @@ public class AgentSubscriptionController extends Controller{
         return product.getUnitPrice();
     }
 
+
+    public Result initializeAgentsSubscription(){
+        DBFilter dbFilter = DBFilter.get();
+        dbFilter.field("currentSubscription").isNull();
+        List<Agent> agentList = db.find(Agent.class, dbFilter);
+        System.out.print("Initialization started");
+        for(Agent agent : agentList){
+            System.out.println(agent.name + "initializing");
+            ApiSave.enableDefaultPlan(agent);
+            System.out.println(agent.name + "initializing successful");
+            System.out.println();
+        }
+        if(agentList.size() == 0){
+            System.out.print("No agent to initialized");
+            return ok("No agent to initialize");
+        }
+        System.out.print("Initialization Completed");
+        return ok("Initialization Completed");
+    }
 }
